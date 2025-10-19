@@ -19,6 +19,7 @@ from .serializers import (
     OTPVerificationSerializer,
     ChangePasswordSerializer
 )
+from .utils import APIResponse
 
 
 class RegisterView(generics.CreateAPIView):
@@ -31,20 +32,27 @@ class RegisterView(generics.CreateAPIView):
     
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if not serializer.is_valid():
+            return APIResponse.validation_error(serializer.errors)
+        
         user = serializer.save()
         
         # Generate tokens for the new user
         refresh = RefreshToken.for_user(user)
         
-        return Response({
-            'message': 'User registered successfully',
+        response_data = {
             'tokens': {
                 'access': str(refresh.access_token),
                 'refresh': str(refresh)
             },
             'user': UserSerializer(user).data
-        }, status=status.HTTP_201_CREATED)
+        }
+        
+        return APIResponse.success(
+            data=response_data,
+            message='User registered successfully',
+            status_code=status.HTTP_201_CREATED
+        )
 
 
 @api_view(['POST'])
@@ -54,19 +62,24 @@ def login_view(request):
     Login user and return JWT tokens
     """
     serializer = UserLoginSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
+    if not serializer.is_valid():
+        return APIResponse.validation_error(serializer.errors)
     
     user = serializer.validated_data['user']
     refresh = RefreshToken.for_user(user)
     
-    return Response({
-        'message': 'Login successful',
+    response_data = {
         'tokens': {
             'access': str(refresh.access_token),
             'refresh': str(refresh)
         },
         'user': UserSerializer(user).data
-    }, status=status.HTTP_200_OK)
+    }
+    
+    return APIResponse.success(
+        data=response_data,
+        message='Login successful'
+    )
 
 
 @api_view(['POST'])
@@ -79,9 +92,12 @@ def logout_view(request):
         refresh_token = request.data["refresh"]
         token = RefreshToken(refresh_token)
         token.blacklist()
-        return Response({'message': 'Logout successful'}, status=status.HTTP_200_OK)
+        return APIResponse.success(message='Logout successful')
     except Exception as e:
-        return Response({'error': 'Invalid token'}, status=status.HTTP_400_BAD_REQUEST)
+        return APIResponse.error(
+            message='Invalid token',
+            error_code='INVALID_TOKEN'
+        )
 
 
 @api_view(['GET'])
@@ -91,7 +107,10 @@ def user_profile_view(request):
     Get current user profile
     """
     serializer = UserSerializer(request.user)
-    return Response(serializer.data)
+    return APIResponse.success(
+        data=serializer.data,
+        message='Profile retrieved successfully'
+    )
 
 
 @api_view(['PUT', 'PATCH'])
@@ -105,11 +124,11 @@ def update_profile_view(request):
         serializer.save()
         # Return updated user data
         user_serializer = UserSerializer(request.user)
-        return Response({
-            'message': 'Profile updated successfully',
-            'user': user_serializer.data
-        })
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return APIResponse.success(
+            data={'user': user_serializer.data},
+            message='Profile updated successfully'
+        )
+    return APIResponse.validation_error(serializer.errors)
 
 
 @api_view(['POST'])
@@ -121,11 +140,15 @@ def refresh_token_view(request):
     try:
         refresh_token = request.data['refresh']
         token = RefreshToken(refresh_token)
-        return Response({
-            'access': str(token.access_token)
-        })
+        return APIResponse.success(
+            data={'access': str(token.access_token)},
+            message='Token refreshed successfully'
+        )
     except Exception as e:
-        return Response({'error': 'Invalid refresh token'}, status=status.HTTP_400_BAD_REQUEST)
+        return APIResponse.error(
+            message='Invalid refresh token',
+            error_code='INVALID_REFRESH_TOKEN'
+        )
 
 
 @api_view(['POST'])
@@ -135,7 +158,8 @@ def password_reset_request_view(request):
     Request password reset - send OTP via email
     """
     serializer = PasswordResetRequestSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
+    if not serializer.is_valid():
+        return APIResponse.validation_error(serializer.errors)
     
     email = serializer.validated_data['email']
     
@@ -188,18 +212,20 @@ def password_reset_request_view(request):
             fail_silently=False,
         )
         
-        return Response({
-            'message': 'Password reset OTP sent successfully',
-            'email': email,
-            'expires_in': '10 minutes'
-        }, status=status.HTTP_200_OK)
+        return APIResponse.success(
+            data={
+                'email': email,
+                'expires_in': '10 minutes'
+            },
+            message='Password reset OTP sent successfully'
+        )
         
     except User.DoesNotExist:
         # Don't reveal if email exists or not for security
-        return Response({
-            'message': 'If an account with this email exists, a password reset OTP has been sent',
-            'email': email
-        }, status=status.HTTP_200_OK)
+        return APIResponse.success(
+            data={'email': email},
+            message='If an account with this email exists, a password reset OTP has been sent'
+        )
 
 
 @api_view(['POST'])
@@ -209,7 +235,8 @@ def password_reset_confirm_view(request):
     Confirm password reset with OTP
     """
     serializer = PasswordResetConfirmSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
+    if not serializer.is_valid():
+        return APIResponse.validation_error(serializer.errors)
     
     email = serializer.validated_data['email']
     otp = serializer.validated_data['otp']
@@ -221,23 +248,25 @@ def password_reset_confirm_view(request):
         # Validate OTP
         is_valid, message = user.is_otp_valid(otp)
         if not is_valid:
-            return Response({
-                'error': message
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return APIResponse.error(
+                message=message,
+                error_code='INVALID_OTP'
+            )
         
         # Set new password
         user.set_password(new_password)
         user.clear_reset_otp()  # Clear the OTP
         user.save()
         
-        return Response({
-            'message': 'Password reset successfully'
-        }, status=status.HTTP_200_OK)
+        return APIResponse.success(
+            message='Password reset successfully'
+        )
         
     except User.DoesNotExist:
-        return Response({
-            'error': 'User not found'
-        }, status=status.HTTP_400_BAD_REQUEST)
+        return APIResponse.not_found(
+            message='User not found',
+            resource_type='User'
+        )
 
 
 @api_view(['POST'])
@@ -247,7 +276,8 @@ def verify_otp_view(request):
     Verify OTP without resetting password
     """
     serializer = OTPVerificationSerializer(data=request.data)
-    serializer.is_valid(raise_exception=True)
+    if not serializer.is_valid():
+        return APIResponse.validation_error(serializer.errors)
     
     email = serializer.validated_data['email']
     otp = serializer.validated_data['otp']
@@ -258,19 +288,21 @@ def verify_otp_view(request):
         # Validate OTP
         is_valid, message = user.is_otp_valid(otp)
         if not is_valid:
-            return Response({
-                'error': message
-            }, status=status.HTTP_400_BAD_REQUEST)
+            return APIResponse.error(
+                message=message,
+                error_code='INVALID_OTP'
+            )
         
-        return Response({
-            'message': 'OTP verified successfully',
-            'email': email
-        }, status=status.HTTP_200_OK)
+        return APIResponse.success(
+            data={'email': email},
+            message='OTP verified successfully'
+        )
         
     except User.DoesNotExist:
-        return Response({
-            'error': 'User not found'
-        }, status=status.HTTP_400_BAD_REQUEST)
+        return APIResponse.not_found(
+            message='User not found',
+            resource_type='User'
+        )
 
 
 @api_view(['POST'])
@@ -280,7 +312,8 @@ def change_password_view(request):
     Change password for authenticated user
     """
     serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
-    serializer.is_valid(raise_exception=True)
+    if not serializer.is_valid():
+        return APIResponse.validation_error(serializer.errors)
     
     user = request.user
     new_password = serializer.validated_data['new_password']
@@ -289,6 +322,6 @@ def change_password_view(request):
     user.set_password(new_password)
     user.save()
     
-    return Response({
-        'message': 'Password changed successfully'
-    }, status=status.HTTP_200_OK)
+    return APIResponse.success(
+        message='Password changed successfully'
+    )
