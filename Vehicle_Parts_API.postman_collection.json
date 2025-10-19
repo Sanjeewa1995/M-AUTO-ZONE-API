@@ -1,0 +1,630 @@
+{
+	"info": {
+		"_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+		"name": "Vehicle Parts API",
+		"description": "Complete API collection for Vehicle Parts Django REST API with JWT Authentication",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"phone\": \"+1234567890\",\n    \"user_type\": \"user\",\n    \"password\": \"password123\",\n    \"password_confirm\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/register/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"register",
+								""
+							]
+						},
+						"description": "Register a new user account"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"user@example.com\",\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"phone\": \"+1234567890\",\n    \"user_type\": \"user\",\n    \"password\": \"password123\",\n    \"password_confirm\": \"password123\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/auth/register/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"register",
+										""
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"User registered successfully\",\n    \"tokens\": {\n        \"access\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n        \"refresh\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n    },\n    \"user\": {\n        \"id\": 1,\n        \"email\": \"user@example.com\",\n        \"first_name\": \"John\",\n        \"last_name\": \"Doe\",\n        \"full_name\": \"John Doe\",\n        \"phone\": \"+1234567890\",\n        \"user_type\": \"user\",\n        \"is_active\": true,\n        \"created_at\": \"2025-10-13T17:39:30.334365Z\",\n        \"updated_at\": \"2025-10-13T17:39:30.334372Z\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Login User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/login/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"login",
+								""
+							]
+						},
+						"description": "Login with email and password"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/auth/login/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"login",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Login successful\",\n    \"tokens\": {\n        \"access\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n        \"refresh\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n    },\n    \"user\": {\n        \"id\": 1,\n        \"email\": \"user@example.com\",\n        \"first_name\": \"John\",\n        \"last_name\": \"Doe\",\n        \"full_name\": \"John Doe\",\n        \"phone\": \"+1234567890\",\n        \"user_type\": \"user\",\n        \"is_active\": true,\n        \"created_at\": \"2025-10-13T17:39:30.334365Z\",\n        \"updated_at\": \"2025-10-13T17:39:30.334372Z\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get User Profile",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/profile/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"profile",
+								""
+							]
+						},
+						"description": "Get current user profile (requires authentication)"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/auth/profile/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"profile",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"id\": 1,\n    \"email\": \"user@example.com\",\n    \"first_name\": \"John\",\n    \"last_name\": \"Doe\",\n    \"full_name\": \"John Doe\",\n    \"phone\": \"+1234567890\",\n    \"user_type\": \"user\",\n    \"is_active\": true,\n    \"created_at\": \"2025-10-13T17:39:30.334365Z\",\n    \"updated_at\": \"2025-10-13T17:39:30.334372Z\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Update User Profile",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"first_name\": \"Jane\",\n    \"last_name\": \"Smith\",\n    \"phone\": \"+9876543210\",\n    \"user_type\": \"user\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/profile/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"profile",
+								""
+							]
+						},
+						"description": "Update current user profile (requires authentication)"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"first_name\": \"Jane\",\n    \"last_name\": \"Smith\",\n    \"phone\": \"+9876543210\",\n    \"user_type\": \"user\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/auth/profile/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"profile",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Profile updated successfully\",\n    \"user\": {\n        \"id\": 1,\n        \"email\": \"user@example.com\",\n        \"first_name\": \"Jane\",\n        \"last_name\": \"Smith\",\n        \"full_name\": \"Jane Smith\",\n        \"phone\": \"+9876543210\",\n        \"user_type\": \"user\",\n        \"is_active\": true,\n        \"created_at\": \"2025-10-13T17:39:30.334365Z\",\n        \"updated_at\": \"2025-10-13T17:39:30.334372Z\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Logout User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/logout/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"logout",
+								""
+							]
+						},
+						"description": "Logout user and blacklist refresh token"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/auth/logout/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"logout",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Logout successful\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Authentication endpoints for user registration, login, profile management, and logout"
+		},
+		{
+			"name": "JWT Token Management",
+			"item": [
+				{
+					"name": "Get Access Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/token/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"token",
+								""
+							]
+						},
+						"description": "Get JWT access and refresh tokens using SimpleJWT"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/token/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"token",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"access\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"refresh\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Refresh Access Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/token/refresh/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"token",
+								"refresh",
+								""
+							]
+						},
+						"description": "Refresh access token using refresh token"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/token/refresh/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"token",
+										"refresh",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"access\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}"
+						}
+					]
+				}
+			],
+			"description": "JWT token management endpoints for getting and refreshing tokens"
+		},
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "API Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/health/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"health",
+								""
+							]
+						},
+						"description": "Check if the API is running and healthy"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/health/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"health",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"status\": \"healthy\",\n    \"timestamp\": \"2025-10-13T17:39:30.334365Z\",\n    \"version\": \"1.0.0\"\n}"
+						}
+					]
+				}
+			],
+			"description": "Health check endpoints to verify API status"
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-set access token from previous login/register responses",
+					"if (pm.response && pm.response.json() && pm.response.json().tokens) {",
+					"    pm.environment.set('access_token', pm.response.json().tokens.access);",
+					"    pm.environment.set('refresh_token', pm.response.json().tokens.refresh);",
+					"}"
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					"// Auto-extract tokens from login/register responses",
+					"if (pm.response.json() && pm.response.json().tokens) {",
+					"    pm.environment.set('access_token', pm.response.json().tokens.access);",
+					"    pm.environment.set('refresh_token', pm.response.json().tokens.refresh);",
+					"    console.log('Tokens saved to environment variables');",
+					"}",
+					"",
+					"// Test response status",
+					"pm.test('Response status is successful', function () {",
+					"    pm.expect(pm.response.code).to.be.oneOf([200, 201]);",
+					"});",
+					"",
+					"// Test response time",
+					"pm.test('Response time is less than 5000ms', function () {",
+					"    pm.expect(pm.response.responseTime).to.be.below(5000);",
+					"});"
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8000",
+			"type": "string"
+		},
+		{
+			"key": "access_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "refresh_token",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
