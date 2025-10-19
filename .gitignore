@@ -138,6 +138,9 @@ static/
 .env.local
 .env.production
 .env.staging
+.env.aws
+.env.rds
+.env.security-group
 
 # IDE
 .vscode/
@@ -157,6 +160,7 @@ Thumbs.db
 
 # AWS
 .aws/
+*.pem
 
 # Docker
 .dockerignore

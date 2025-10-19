@@ -5,7 +5,11 @@ from .views import (
     logout_view,
     user_profile_view,
     update_profile_view,
-    refresh_token_view
+    refresh_token_view,
+    password_reset_request_view,
+    password_reset_confirm_view,
+    verify_otp_view,
+    change_password_view
 )
 
 urlpatterns = [
@@ -15,4 +19,8 @@ urlpatterns = [
     path('profile/', user_profile_view, name='user-profile'),
     path('profile/update/', update_profile_view, name='update-profile'),
     path('refresh/', refresh_token_view, name='refresh-token'),
+    path('password-reset/', password_reset_request_view, name='password-reset-request'),
+    path('password-reset/confirm/', password_reset_confirm_view, name='password-reset-confirm'),
+    path('verify-otp/', verify_otp_view, name='verify-otp'),
+    path('change-password/', change_password_view, name='change-password'),
 ]
