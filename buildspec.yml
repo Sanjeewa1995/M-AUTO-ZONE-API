@@ -1,0 +1,37 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo Logging in to Amazon ECR...
+      - echo Build started on `date`
+      - echo Building the Docker image...
+      
+  build:
+    commands:
+      - echo Build completed on `date`
+      - echo Building Docker image...
+      - docker build -t vehicle-parts-api .
+      - echo Docker image built successfully
+      
+  post_build:
+    commands:
+      - echo Build completed on `date`
+      - echo Preparing deployment package...
+      - tar -czf vehicle-parts-api-deploy.tar.gz \
+          --exclude='venv' \
+          --exclude='__pycache__' \
+          --exclude='*.pyc' \
+          --exclude='.git' \
+          --exclude='.env*' \
+          --exclude='*.log' \
+          --exclude='staticfiles' \
+          --exclude='media' \
+          --exclude='*.tar.gz' \
+          .
+      - echo Deployment package created successfully
+
+artifacts:
+  files:
+    - '**/*'
+  name: vehicle-parts-api-$(date +%Y-%m-%d-%H-%M-%S)
