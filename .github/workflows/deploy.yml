@@ -103,7 +103,12 @@ jobs:
             -e DB_USER="admin" \
             -e DB_PASSWORD="VehicleParts123!" \
             -e DB_NAME="vehicle_parts" \
-            -e EMAIL_BACKEND="django.core.mail.backends.console.EmailBackend" \
+            -e EMAIL_BACKEND="django.core.mail.backends.smtp.EmailBackend" \
+            -e EMAIL_HOST="email-smtp.ap-southeast-2.amazonaws.com" \
+            -e EMAIL_PORT="587" \
+            -e EMAIL_USE_TLS="True" \
+            -e EMAIL_HOST_USER="AKIASCRDKW6LMO3EDX57" \
+            -e EMAIL_HOST_PASSWORD="4KKUNby5FNClDBompEml9d7pHLgZZk2V4N/WUSH9" \
             -e DEFAULT_FROM_EMAIL="noreply@vehicleparts.com" \
             -e CORS_ALLOWED_ORIGINS="http://localhost:3000,http://127.0.0.1:3000,http://3.107.165.131:8000" \
             vehicle-parts-api
