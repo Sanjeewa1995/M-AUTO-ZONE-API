@@ -31,21 +31,21 @@ jobs:
     - name: Create deployment package
       run: |
         # Create a clean directory for packaging
-        mkdir -p ../deploy-temp
-        cp -r . ../deploy-temp/vehicle-parts-api
+        mkdir -p deploy-temp
+        cp -r . deploy-temp/vehicle-parts-api
         
         # Remove unwanted files from the copy
-        cd ../deploy-temp/vehicle-parts-api
+        cd deploy-temp/vehicle-parts-api
         rm -rf venv __pycache__ .git .env* *.log staticfiles media *.tar.gz
         find . -name "*.pyc" -delete
         find . -name "__pycache__" -type d -exec rm -rf {} + 2>/dev/null || true
         
         # Create the tar file
-        cd ..
-        tar -czf vehicle-parts-api-deploy.tar.gz vehicle-parts-api/
+        cd ../..
+        tar -czf vehicle-parts-api-deploy.tar.gz -C deploy-temp vehicle-parts-api/
         
-        # Move the tar file back to the original directory
-        mv vehicle-parts-api-deploy.tar.gz ../vehicle-parts-api/
+        # Clean up temporary directory
+        rm -rf deploy-temp
           
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v0.1.5
