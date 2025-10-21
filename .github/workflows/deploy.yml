@@ -30,20 +30,14 @@ jobs:
         
     - name: Create deployment package
       run: |
-        # Create deployment package with exclusions
-        tar -czf vehicle-parts-api-deploy.tar.gz \
-          --exclude='venv' \
-          --exclude='__pycache__' \
-          --exclude='*.pyc' \
-          --exclude='.git' \
-          --exclude='.env*' \
-          --exclude='*.log' \
-          --exclude='staticfiles' \
-          --exclude='media' \
-          --exclude='*.tar.gz' \
-          --exclude='deploy-temp' \
-          --exclude='.github' \
-          .
+        # Create a clean copy for packaging
+        rsync -av --exclude='venv' --exclude='__pycache__' --exclude='*.pyc' --exclude='.git' --exclude='.env*' --exclude='*.log' --exclude='staticfiles' --exclude='media' --exclude='*.tar.gz' --exclude='.github' . deploy-temp/
+        
+        # Create tar from the clean copy
+        tar -czf vehicle-parts-api-deploy.tar.gz -C deploy-temp .
+        
+        # Clean up
+        rm -rf deploy-temp
           
     - name: Deploy to EC2
       uses: appleboy/ssh-action@v0.1.5
