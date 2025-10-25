@@ -93,7 +93,7 @@ jobs:
           
           # Build and run Docker container
           echo "🐳 Building and running Docker container..."
-          docker build -t vehicle-parts-api .
+          docker build --no-cache -t vehicle-parts-api .
           docker run -d --name vehicle-parts-api -p 8000:8000 \
             -e SECRET_KEY="your-production-secret-key-here" \
             -e DEBUG="False" \
@@ -111,7 +111,7 @@ jobs:
             -e EMAIL_HOST_PASSWORD="BLanh3xQY9lE7eTL6rElPtE/nxN+R2TRyUQ66cxbdN5m" \
             -e DEFAULT_FROM_EMAIL="malakasanjeeva@gmail.com" \
             -e CORS_ALLOWED_ORIGINS="http://localhost:3000,http://127.0.0.1:3000,http://3.107.165.131:8000" \
-            -e USE_S3="True" \
+            -e USE_S3="False" \
             -e AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}" \
             -e AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
             -e AWS_STORAGE_BUCKET_NAME="vehicle-parts-api-malaka-1761402802" \
@@ -129,6 +129,14 @@ jobs:
           # Test the API
           echo "🧪 Testing API..."
           curl -s http://localhost:8000/api/v1/auth/health/ || echo "Health check failed"
+          
+          # Test image upload endpoint
+          echo "🧪 Testing image upload endpoint..."
+          curl -s http://localhost:8000/api/v1/requests/vehicle-part-requests/ | head -3
+          
+          # Check container logs for any errors
+          echo "📋 Checking container logs..."
+          docker logs vehicle-parts-api --tail 5
           
           echo "✅ Deployment completed successfully!"
           echo "🌐 API is available at: http://3.107.165.131:8000"
