@@ -9,11 +9,10 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from .models import User
 from .serializers import (
-    UserRegistrationSerializer, 
-    UserLoginSerializer, 
+    UserRegistrationSerializer,
+    UserLoginSerializer,
     UserSerializer,
     UserUpdateSerializer,
-    TokenSerializer,
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
     OTPVerificationSerializer,
@@ -29,17 +28,17 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = UserRegistrationSerializer
     permission_classes = [AllowAny]
-    
+
     def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
+        serializer = UserRegistrationSerializer(data=request.data)
         if not serializer.is_valid():
             return APIResponse.validation_error(serializer.errors)
-        
+
         user = serializer.save()
-        
+
         # Generate tokens for the new user
         refresh = RefreshToken.for_user(user)
-        
+
         response_data = {
             'tokens': {
                 'access': str(refresh.access_token),
@@ -47,7 +46,7 @@ class RegisterView(generics.CreateAPIView):
             },
             'user': UserSerializer(user).data
         }
-        
+
         return APIResponse.success(
             data=response_data,
             message='User registered successfully',
@@ -64,10 +63,10 @@ def login_view(request):
     serializer = UserLoginSerializer(data=request.data)
     if not serializer.is_valid():
         return APIResponse.validation_error(serializer.errors)
-    
+
     user = serializer.validated_data['user']
     refresh = RefreshToken.for_user(user)
-    
+
     response_data = {
         'tokens': {
             'access': str(refresh.access_token),
@@ -75,7 +74,7 @@ def login_view(request):
         },
         'user': UserSerializer(user).data
     }
-    
+
     return APIResponse.success(
         data=response_data,
         message='Login successful'
@@ -119,7 +118,8 @@ def update_profile_view(request):
     """
     Update current user profile
     """
-    serializer = UserUpdateSerializer(request.user, data=request.data, partial=True)
+    serializer = UserUpdateSerializer(
+        request.user, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
         # Return updated user data
@@ -160,17 +160,17 @@ def password_reset_request_view(request):
     serializer = PasswordResetRequestSerializer(data=request.data)
     if not serializer.is_valid():
         return APIResponse.validation_error(serializer.errors)
-    
+
     email = serializer.validated_data['email']
-    
+
     try:
         user = User.objects.get(email=email)
         # Generate OTP
         otp = user.generate_reset_otp()
-        
+
         # Send OTP email
         subject = 'Password Reset OTP - Vehicle Parts API'
-        
+
         # Simple email template
         html_message = f"""
         <html>
@@ -202,7 +202,7 @@ def password_reset_request_view(request):
         Best regards,
         Vehicle Parts API Team
         """
-        
+
         send_mail(
             subject=subject,
             message=plain_message,
@@ -211,7 +211,7 @@ def password_reset_request_view(request):
             html_message=html_message,
             fail_silently=False,
         )
-        
+
         return APIResponse.success(
             data={
                 'email': email,
@@ -219,7 +219,7 @@ def password_reset_request_view(request):
             },
             message='Password reset OTP sent successfully'
         )
-        
+
     except User.DoesNotExist:
         # Don't reveal if email exists or not for security
         return APIResponse.success(
@@ -237,14 +237,14 @@ def password_reset_confirm_view(request):
     serializer = PasswordResetConfirmSerializer(data=request.data)
     if not serializer.is_valid():
         return APIResponse.validation_error(serializer.errors)
-    
+
     email = serializer.validated_data['email']
     otp = serializer.validated_data['otp']
     new_password = serializer.validated_data['new_password']
-    
+
     try:
         user = User.objects.get(email=email)
-        
+
         # Validate OTP
         is_valid, message = user.is_otp_valid(otp)
         if not is_valid:
@@ -252,16 +252,16 @@ def password_reset_confirm_view(request):
                 message=message,
                 error_code='INVALID_OTP'
             )
-        
+
         # Set new password
         user.set_password(new_password)
         user.clear_reset_otp()  # Clear the OTP
         user.save()
-        
+
         return APIResponse.success(
             message='Password reset successfully'
         )
-        
+
     except User.DoesNotExist:
         return APIResponse.not_found(
             message='User not found',
@@ -278,13 +278,13 @@ def verify_otp_view(request):
     serializer = OTPVerificationSerializer(data=request.data)
     if not serializer.is_valid():
         return APIResponse.validation_error(serializer.errors)
-    
+
     email = serializer.validated_data['email']
     otp = serializer.validated_data['otp']
-    
+
     try:
         user = User.objects.get(email=email)
-        
+
         # Validate OTP
         is_valid, message = user.is_otp_valid(otp)
         if not is_valid:
@@ -292,12 +292,12 @@ def verify_otp_view(request):
                 message=message,
                 error_code='INVALID_OTP'
             )
-        
+
         return APIResponse.success(
             data={'email': email},
             message='OTP verified successfully'
         )
-        
+
     except User.DoesNotExist:
         return APIResponse.not_found(
             message='User not found',
@@ -311,17 +311,18 @@ def change_password_view(request):
     """
     Change password for authenticated user
     """
-    serializer = ChangePasswordSerializer(data=request.data, context={'request': request})
+    serializer = ChangePasswordSerializer(
+        data=request.data, context={'request': request})
     if not serializer.is_valid():
         return APIResponse.validation_error(serializer.errors)
-    
+
     user = request.user
     new_password = serializer.validated_data['new_password']
-    
+
     # Set new password
     user.set_password(new_password)
     user.save()
-    
+
     return APIResponse.success(
         message='Password changed successfully'
     )

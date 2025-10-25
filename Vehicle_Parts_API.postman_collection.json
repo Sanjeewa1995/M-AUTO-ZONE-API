@@ -817,6 +817,630 @@
 			"description": "OTP-based password reset endpoints for mobile apps"
 		},
 		{
+			"name": "Vehicle Part Requests",
+			"item": [
+				{
+					"name": "Create Vehicle Part Request",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "vehicle_type",
+									"value": "car",
+									"type": "text"
+								},
+								{
+									"key": "vehicle_model",
+									"value": "Toyota Camry",
+									"type": "text"
+								},
+								{
+									"key": "vehicle_year",
+									"value": "2020",
+									"type": "text"
+								},
+								{
+									"key": "part_name",
+									"value": "Brake Pad",
+									"type": "text"
+								},
+								{
+									"key": "part_number",
+									"value": "BP-001",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Need front brake pads for Toyota Camry 2020",
+									"type": "text"
+								},
+								{
+									"key": "vehicle_image",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "part_image",
+									"type": "file",
+									"src": []
+								},
+								{
+									"key": "part_video",
+									"type": "file",
+									"src": []
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/requests/vehicle-part-requests/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"requests",
+								"vehicle-part-requests",
+								""
+							]
+						},
+						"description": "Create a new vehicle part request with images and videos (automatically compressed)"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "vehicle_type",
+											"value": "car",
+											"type": "text"
+										},
+										{
+											"key": "vehicle_model",
+											"value": "Toyota Camry",
+											"type": "text"
+										},
+										{
+											"key": "vehicle_year",
+											"value": "2020",
+											"type": "text"
+										},
+										{
+											"key": "part_name",
+											"value": "Brake Pad",
+											"type": "text"
+										},
+										{
+											"key": "part_number",
+											"value": "BP-001",
+											"type": "text"
+										},
+										{
+											"key": "description",
+											"value": "Need front brake pads for Toyota Camry 2020",
+											"type": "text"
+										},
+										{
+											"key": "vehicle_image",
+											"type": "file",
+											"src": []
+										},
+										{
+											"key": "part_image",
+											"type": "file",
+											"src": []
+										},
+										{
+											"key": "part_video",
+											"type": "file",
+											"src": []
+										}
+									]
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/requests/vehicle-part-requests/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"requests",
+										"vehicle-part-requests",
+										""
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Vehicle part request created successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"vehicle_type\": \"car\",\n        \"vehicle_model\": \"Toyota Camry\",\n        \"vehicle_year\": 2020,\n        \"part_name\": \"Brake Pad\",\n        \"part_number\": \"BP-001\",\n        \"vehicle_image\": \"/media/vehicle_images/compressed_image.jpg\",\n        \"part_image\": \"/media/part_images/compressed_part.jpg\",\n        \"part_video\": \"/media/part_videos/compressed_video.mp4\",\n        \"description\": \"Need front brake pads for Toyota Camry 2020\",\n        \"status\": \"pending\",\n        \"user\": {\n            \"id\": 1,\n            \"email\": \"user@example.com\",\n            \"first_name\": \"John\",\n            \"last_name\": \"Doe\"\n        },\n        \"vehicle_display\": \"Car Toyota Camry (2020)\",\n        \"created_at\": \"2025-10-25T14:40:19.742830Z\",\n        \"updated_at\": \"2025-10-25T14:40:19.742830Z\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "List Vehicle Part Requests",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/requests/vehicle-part-requests/?page=1&page_size=10&vehicle_type=car&status=pending",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"requests",
+								"vehicle-part-requests",
+								""
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "page_size",
+									"value": "10"
+								},
+								{
+									"key": "vehicle_type",
+									"value": "car"
+								},
+								{
+									"key": "status",
+									"value": "pending"
+								},
+								{
+									"key": "search",
+									"value": "brake",
+									"disabled": true
+								},
+								{
+									"key": "ordering",
+									"value": "-created_at",
+									"disabled": true
+								}
+							]
+						},
+						"description": "Get list of vehicle part requests with filtering, searching, and pagination"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/requests/vehicle-part-requests/?page=1&page_size=10&vehicle_type=car&status=pending",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"requests",
+										"vehicle-part-requests",
+										""
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "1"
+										},
+										{
+											"key": "page_size",
+											"value": "10"
+										},
+										{
+											"key": "vehicle_type",
+											"value": "car"
+										},
+										{
+											"key": "status",
+											"value": "pending"
+										}
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"count\": 1,\n    \"next\": null,\n    \"previous\": null,\n    \"results\": [\n        {\n            \"id\": 1,\n            \"vehicle_type\": \"car\",\n            \"vehicle_model\": \"Toyota Camry\",\n            \"vehicle_year\": 2020,\n            \"part_name\": \"Brake Pad\",\n            \"part_number\": \"BP-001\",\n            \"vehicle_image\": \"/media/vehicle_images/compressed_image.jpg\",\n            \"part_image\": \"/media/part_images/compressed_part.jpg\",\n            \"part_video\": \"/media/part_videos/compressed_video.mp4\",\n            \"description\": \"Need front brake pads for Toyota Camry 2020\",\n            \"status\": \"pending\",\n            \"user\": {\n                \"id\": 1,\n                \"email\": \"user@example.com\",\n                \"first_name\": \"John\",\n                \"last_name\": \"Doe\"\n            },\n            \"vehicle_display\": \"Car Toyota Camry (2020)\",\n            \"created_at\": \"2025-10-25T14:40:19.742830Z\",\n            \"updated_at\": \"2025-10-25T14:40:19.742830Z\"\n        }\n    ]\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Vehicle Part Request Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/requests/vehicle-part-requests/1/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"requests",
+								"vehicle-part-requests",
+								"1",
+								""
+							]
+						},
+						"description": "Get details of a specific vehicle part request"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/requests/vehicle-part-requests/1/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"requests",
+										"vehicle-part-requests",
+										"1",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"id\": 1,\n    \"vehicle_type\": \"car\",\n    \"vehicle_model\": \"Toyota Camry\",\n    \"vehicle_year\": 2020,\n    \"part_name\": \"Brake Pad\",\n    \"part_number\": \"BP-001\",\n    \"vehicle_image\": \"/media/vehicle_images/compressed_image.jpg\",\n    \"part_image\": \"/media/part_images/compressed_part.jpg\",\n    \"part_video\": \"/media/part_videos/compressed_video.mp4\",\n    \"description\": \"Need front brake pads for Toyota Camry 2020\",\n    \"status\": \"pending\",\n    \"user\": {\n        \"id\": 1,\n        \"email\": \"user@example.com\",\n        \"first_name\": \"John\",\n        \"last_name\": \"Doe\"\n    },\n    \"vehicle_display\": \"Car Toyota Camry (2020)\",\n    \"created_at\": \"2025-10-25T14:40:19.742830Z\",\n    \"updated_at\": \"2025-10-25T14:40:19.742830Z\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Vehicle Part Request",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "vehicle_type",
+									"value": "car",
+									"type": "text"
+								},
+								{
+									"key": "vehicle_model",
+									"value": "Toyota Camry",
+									"type": "text"
+								},
+								{
+									"key": "vehicle_year",
+									"value": "2020",
+									"type": "text"
+								},
+								{
+									"key": "part_name",
+									"value": "Brake Pad Set",
+									"type": "text"
+								},
+								{
+									"key": "part_number",
+									"value": "BP-002",
+									"type": "text"
+								},
+								{
+									"key": "description",
+									"value": "Updated: Need complete brake pad set for Toyota Camry 2020",
+									"type": "text"
+								},
+								{
+									"key": "status",
+									"value": "in_progress",
+									"type": "text"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/requests/vehicle-part-requests/1/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"requests",
+								"vehicle-part-requests",
+								"1",
+								""
+							]
+						},
+						"description": "Update a vehicle part request (partial update with PATCH also supported)"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"body": {
+									"mode": "formdata",
+									"formdata": [
+										{
+											"key": "vehicle_type",
+											"value": "car",
+											"type": "text"
+										},
+										{
+											"key": "vehicle_model",
+											"value": "Toyota Camry",
+											"type": "text"
+										},
+										{
+											"key": "vehicle_year",
+											"value": "2020",
+											"type": "text"
+										},
+										{
+											"key": "part_name",
+											"value": "Brake Pad Set",
+											"type": "text"
+										},
+										{
+											"key": "part_number",
+											"value": "BP-002",
+											"type": "text"
+										},
+										{
+											"key": "description",
+											"value": "Updated: Need complete brake pad set for Toyota Camry 2020",
+											"type": "text"
+										},
+										{
+											"key": "status",
+											"value": "in_progress",
+											"type": "text"
+										}
+									]
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/requests/vehicle-part-requests/1/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"requests",
+										"vehicle-part-requests",
+										"1",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Vehicle part request updated successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"vehicle_type\": \"car\",\n        \"vehicle_model\": \"Toyota Camry\",\n        \"vehicle_year\": 2020,\n        \"part_name\": \"Brake Pad Set\",\n        \"part_number\": \"BP-002\",\n        \"vehicle_image\": \"/media/vehicle_images/compressed_image.jpg\",\n        \"part_image\": \"/media/part_images/compressed_part.jpg\",\n        \"part_video\": \"/media/part_videos/compressed_video.mp4\",\n        \"description\": \"Updated: Need complete brake pad set for Toyota Camry 2020\",\n        \"status\": \"in_progress\",\n        \"user\": {\n            \"id\": 1,\n            \"email\": \"user@example.com\",\n            \"first_name\": \"John\",\n            \"last_name\": \"Doe\"\n        },\n        \"vehicle_display\": \"Car Toyota Camry (2020)\",\n        \"created_at\": \"2025-10-25T14:40:19.742830Z\",\n        \"updated_at\": \"2025-10-25T14:40:19.742830Z\"\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Vehicle Part Request",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/requests/vehicle-part-requests/1/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"requests",
+								"vehicle-part-requests",
+								"1",
+								""
+							]
+						},
+						"description": "Delete a vehicle part request"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/requests/vehicle-part-requests/1/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"requests",
+										"vehicle-part-requests",
+										"1",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Vehicle part request deleted successfully\"\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Request Statistics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/requests/vehicle-part-requests/stats/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"requests",
+								"vehicle-part-requests",
+								"stats",
+								""
+							]
+						},
+						"description": "Get statistics for user's vehicle part requests"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/requests/vehicle-part-requests/stats/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"requests",
+										"vehicle-part-requests",
+										"stats",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"message\": \"Statistics retrieved successfully\",\n    \"data\": {\n        \"total_requests\": 5,\n        \"pending_requests\": 2,\n        \"in_progress_requests\": 1,\n        \"completed_requests\": 2,\n        \"cancelled_requests\": 0\n    }\n}"
+						}
+					]
+				}
+			],
+			"description": "Vehicle Part Request endpoints for creating, managing, and tracking vehicle part requests with automatic file compression"
+		},
+		{
 			"name": "Health Check",
 			"item": [
 				{
