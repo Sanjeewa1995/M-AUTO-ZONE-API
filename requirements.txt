@@ -7,3 +7,13 @@ PyMySQL==1.1.0
 Pillow==11.0.0
 django-filter==25.1
 gunicorn==23.0.0
+
+# File compression and image processing
+opencv-python==4.12.0.88
+imageio==2.37.0
+imageio-ffmpeg==0.6.0
+numpy==2.2.6
+
+# AWS S3 storage
+boto3==1.40.59
+django-storages==1.14.6
