@@ -29,6 +29,55 @@ class ImageCompressor:
     THUMBNAIL_SIZE = (300, 300)
     
     @staticmethod
+    def compress_image_data(
+        image_data: bytes, 
+        quality: int = 70,
+        max_size_mb: float = 2.0
+    ) -> bytes:
+        """
+        Compress image data (bytes) with specified quality
+        
+        Args:
+            image_data: Raw image bytes
+            quality: JPEG quality (1-100)
+            max_size_mb: Maximum file size in MB
+            
+        Returns:
+            Compressed image bytes
+        """
+        try:
+            # Open image from bytes
+            image = Image.open(io.BytesIO(image_data))
+            
+            # Convert to RGB if necessary
+            if image.mode in ('RGBA', 'LA', 'P'):
+                image = image.convert('RGB')
+            
+            # Resize if too large
+            if image.width > ImageCompressor.MAX_WIDTH or image.height > ImageCompressor.MAX_HEIGHT:
+                image.thumbnail((ImageCompressor.MAX_WIDTH, ImageCompressor.MAX_HEIGHT), Image.Resampling.LANCZOS)
+            
+            # Compress with specified quality
+            output = io.BytesIO()
+            image.save(output, format='JPEG', quality=quality, optimize=True)
+            compressed_data = output.getvalue()
+            
+            # Check size limit
+            max_size_bytes = max_size_mb * 1024 * 1024
+            if len(compressed_data) > max_size_bytes:
+                # Reduce quality further if still too large
+                quality = max(30, quality - 20)
+                output = io.BytesIO()
+                image.save(output, format='JPEG', quality=quality, optimize=True)
+                compressed_data = output.getvalue()
+            
+            return compressed_data
+            
+        except Exception as e:
+            logger.error(f"Image compression failed: {str(e)}")
+            return image_data  # Return original if compression fails
+
+    @staticmethod
     def compress_image(
         image_file: UploadedFile, 
         image_type: str = 'vehicle',
@@ -384,12 +433,20 @@ class FileSizeValidator:
     ALLOWED_VIDEO_TYPES = ['video/mp4', 'video/avi', 'video/mov', 'video/quicktime']
     
     @staticmethod
-    def validate_image_file(file: UploadedFile) -> Tuple[bool, str]:
+    def validate_image_file(file) -> Tuple[bool, str]:
         """Validate image file size and type"""
-        if file.size > FileSizeValidator.MAX_IMAGE_SIZE:
+        # Handle both UploadedFile and bytes
+        if hasattr(file, 'size'):
+            file_size = file.size
+            content_type = getattr(file, 'content_type', 'image/jpeg')
+        else:
+            file_size = len(file) if isinstance(file, (bytes, bytearray)) else 0
+            content_type = 'image/jpeg'  # Default for bytes
+        
+        if file_size > FileSizeValidator.MAX_IMAGE_SIZE:
             return False, f"Image file too large. Maximum size: {FileSizeValidator.MAX_IMAGE_SIZE // (1024*1024)}MB"
         
-        if file.content_type not in FileSizeValidator.ALLOWED_IMAGE_TYPES:
+        if content_type not in FileSizeValidator.ALLOWED_IMAGE_TYPES:
             return False, f"Invalid image type. Allowed types: {', '.join(FileSizeValidator.ALLOWED_IMAGE_TYPES)}"
         
         return True, "Valid image file"
