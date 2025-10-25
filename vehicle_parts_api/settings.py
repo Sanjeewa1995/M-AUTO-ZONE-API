@@ -249,6 +249,8 @@ if USE_S3:
     AWS_QUERYSTRING_AUTH = False
     AWS_S3_VERIFY = True
     AWS_S3_USE_SSL = True
+    AWS_S3_IGNORE_ACL = True
+    AWS_S3_ACL = None
     
     # Static files (CSS, JavaScript, Images)
     STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
