@@ -232,7 +232,7 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='malakasanjeewa1995@gmail.com')
 
 # AWS S3 Configuration
-USE_S3 = False  # Temporarily disabled to test image upload
+USE_S3 = True  # Enable S3 for production
 
 if USE_S3:
     # AWS S3 settings
