@@ -1,6 +1,7 @@
 """
 Image and Video Compression Utilities for Vehicle Parts API
 Reduces file sizes by 50-70% while maintaining quality
+Simplified version without OpenCV dependencies for Docker compatibility
 """
 
 import os
@@ -8,8 +9,6 @@ import io
 import logging
 from typing import Tuple, Optional
 from PIL import Image, ImageOps
-import cv2
-import imageio
 from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import UploadedFile
 
@@ -232,14 +231,9 @@ class ImageCompressor:
 
 class VideoCompressor:
     """
-    Handles video compression for part videos
+    Simplified video compressor without OpenCV dependencies
+    For now, this is a placeholder that returns the original file
     """
-    
-    # Video compression settings
-    MAX_WIDTH = 1280
-    MAX_HEIGHT = 720
-    TARGET_BITRATE = '500k'  # 500 kbps
-    MAX_DURATION = 60  # 60 seconds max
     
     @staticmethod
     def compress_video(
@@ -247,179 +241,11 @@ class VideoCompressor:
         max_size_mb: float = 10.0
     ) -> ContentFile:
         """
-        Compress a video file
-        
-        Args:
-            video_file: The uploaded video file
-            max_size_mb: Maximum file size in MB
-            
-        Returns:
-            Compressed ContentFile
+        Placeholder for video compression
+        For now, just returns the original file
         """
-        try:
-            # Read video file
-            video_data = video_file.read()
-            video_file.seek(0)  # Reset file pointer
-            
-            # Get video info
-            video_info = VideoCompressor._get_video_info(video_data)
-            if not video_info:
-                logger.warning("Could not read video info, returning original file")
-                return video_file
-            
-            width, height, duration = video_info
-            
-            # Check if video is too long
-            if duration > VideoCompressor.MAX_DURATION:
-                logger.warning(f"Video too long ({duration}s), truncating to {VideoCompressor.MAX_DURATION}s")
-                duration = VideoCompressor.MAX_DURATION
-            
-            # Calculate new dimensions
-            new_width, new_height = VideoCompressor._calculate_dimensions(width, height)
-            
-            # Compress video
-            compressed_data = VideoCompressor._compress_video_data(
-                video_data, new_width, new_height, max_size_mb
-            )
-            
-            if not compressed_data:
-                logger.warning("Video compression failed, returning original file")
-                return video_file
-            
-            # Create ContentFile
-            compressed_file = ContentFile(compressed_data)
-            compressed_file.name = VideoCompressor._get_compressed_filename(video_file.name)
-            
-            logger.info(f"Video compressed: {len(video_data)} -> {len(compressed_data)} bytes")
-            return compressed_file
-            
-        except Exception as e:
-            logger.error(f"Video compression failed: {str(e)}")
-            return video_file
-    
-    @staticmethod
-    def _get_video_info(video_data: bytes) -> Optional[Tuple[int, int, float]]:
-        """Get video dimensions and duration"""
-        try:
-            # Use imageio to read video metadata
-            with imageio.get_reader(io.BytesIO(video_data)) as reader:
-                meta = reader.get_meta_data()
-                width = meta.get('size', (0, 0))[0]
-                height = meta.get('size', (0, 0))[1]
-                duration = meta.get('duration', 0)
-                return width, height, duration
-        except Exception as e:
-            logger.error(f"Could not read video info: {str(e)}")
-            return None
-    
-    @staticmethod
-    def _calculate_dimensions(width: int, height: int) -> Tuple[int, int]:
-        """Calculate new dimensions maintaining aspect ratio"""
-        if width <= VideoCompressor.MAX_WIDTH and height <= VideoCompressor.MAX_HEIGHT:
-            return width, height
-        
-        ratio = min(
-            VideoCompressor.MAX_WIDTH / width,
-            VideoCompressor.MAX_HEIGHT / height
-        )
-        
-        new_width = int(width * ratio)
-        new_height = int(height * ratio)
-        
-        # Ensure dimensions are even (required for some codecs)
-        new_width = new_width - (new_width % 2)
-        new_height = new_height - (new_height % 2)
-        
-        return new_width, new_height
-    
-    @staticmethod
-    def _compress_video_data(
-        video_data: bytes, 
-        width: int, 
-        height: int, 
-        max_size_mb: float
-    ) -> Optional[bytes]:
-        """Compress video data using OpenCV"""
-        try:
-            # Create temporary file
-            temp_input = io.BytesIO(video_data)
-            temp_output = io.BytesIO()
-            
-            # Use OpenCV to compress video
-            cap = cv2.VideoCapture()
-            cap.open(temp_input)
-            
-            if not cap.isOpened():
-                return None
-            
-            # Get video properties
-            fps = cap.get(cv2.CAP_PROP_FPS) or 30
-            frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
-            
-            # Calculate target bitrate based on max size
-            max_size_bytes = int(max_size_mb * 1024 * 1024)
-            target_bitrate = min(int(max_size_bytes * 8 / (frame_count / fps)), 2000)  # Max 2Mbps
-            
-            # Set up video writer
-            fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-            out = cv2.VideoWriter()
-            
-            # Try different quality settings
-            for quality in [90, 80, 70, 60, 50]:
-                temp_output.seek(0)
-                temp_output.truncate()
-                
-                success = out.open(
-                    temp_output, 
-                    fourcc, 
-                    fps, 
-                    (width, height),
-                    True
-                )
-                
-                if not success:
-                    continue
-                
-                # Read and write frames
-                cap.set(cv2.CAP_PROP_POS_FRAMES, 0)
-                frame_count = 0
-                
-                while True:
-                    ret, frame = cap.read()
-                    if not ret:
-                        break
-                    
-                    # Resize frame if needed
-                    if frame.shape[1] != width or frame.shape[0] != height:
-                        frame = cv2.resize(frame, (width, height))
-                    
-                    out.write(frame)
-                    frame_count += 1
-                    
-                    # Check if we've exceeded max duration
-                    if frame_count >= fps * VideoCompressor.MAX_DURATION:
-                        break
-                
-                out.release()
-                
-                # Check if compressed size is acceptable
-                compressed_data = temp_output.getvalue()
-                if len(compressed_data) <= max_size_bytes:
-                    cap.release()
-                    return compressed_data
-            
-            cap.release()
-            return None
-            
-        except Exception as e:
-            logger.error(f"Video compression error: {str(e)}")
-            return None
-    
-    @staticmethod
-    def _get_compressed_filename(original_name: str) -> str:
-        """Generate filename for compressed video"""
-        name, ext = os.path.splitext(original_name)
-        return f"{name}_compressed.mp4"
+        logger.info("Video compression is currently disabled (OpenCV not available)")
+        return video_file
 
 
 class FileSizeValidator:
@@ -474,5 +300,5 @@ def compress_part_image(image_file: UploadedFile) -> ContentFile:
 
 
 def compress_part_video(video_file: UploadedFile) -> ContentFile:
-    """Compress part video with optimized settings"""
+    """Compress part video with optimized settings (placeholder)"""
     return VideoCompressor.compress_video(video_file, max_size_mb=10.0)

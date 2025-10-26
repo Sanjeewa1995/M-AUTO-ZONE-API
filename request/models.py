@@ -1,13 +1,13 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
-# Compression utilities disabled for now
-# from .compression_utils import (
-#     compress_vehicle_image, 
-#     compress_part_image, 
-#     compress_part_video,
-#     FileSizeValidator
-# )
+from django.core.files.uploadedfile import UploadedFile
+from .compression_utils import (
+    compress_vehicle_image, 
+    compress_part_image, 
+    compress_part_video,
+    FileSizeValidator
+)
 
 User = get_user_model()
 
@@ -130,6 +130,39 @@ class VehiclePartRequest(models.Model):
             })
     
     def save(self, *args, **kwargs):
-        """Override save method - compression disabled for now"""
-        # Compression disabled - files will be saved as-is
+        """Override save to compress media files"""
+        # Compress images before saving
+        if self.vehicle_image and hasattr(self.vehicle_image, 'file'):
+            if isinstance(self.vehicle_image.file, UploadedFile):
+                # Validate file
+                is_valid, error_msg = FileSizeValidator.validate_image_file(self.vehicle_image.file)
+                if not is_valid:
+                    raise ValidationError({'vehicle_image': error_msg})
+                
+                # Compress file
+                compressed_file = compress_vehicle_image(self.vehicle_image.file)
+                self.vehicle_image = compressed_file
+        
+        if self.part_image and hasattr(self.part_image, 'file'):
+            if isinstance(self.part_image.file, UploadedFile):
+                # Validate file
+                is_valid, error_msg = FileSizeValidator.validate_image_file(self.part_image.file)
+                if not is_valid:
+                    raise ValidationError({'part_image': error_msg})
+                
+                # Compress file
+                compressed_file = compress_part_image(self.part_image.file)
+                self.part_image = compressed_file
+        
+        if self.part_video and hasattr(self.part_video, 'file'):
+            if isinstance(self.part_video.file, UploadedFile):
+                # Validate file
+                is_valid, error_msg = FileSizeValidator.validate_video_file(self.part_video.file)
+                if not is_valid:
+                    raise ValidationError({'part_video': error_msg})
+                
+                # Compress file (placeholder for now)
+                compressed_file = compress_part_video(self.part_video.file)
+                self.part_video = compressed_file
+        
         super().save(*args, **kwargs)
