@@ -261,7 +261,8 @@ if USE_S3 and config('AWS_ACCESS_KEY_ID', default='') and config('AWS_STORAGE_BU
     STATIC_ROOT = BASE_DIR / 'staticfiles'
     
     # WhiteNoise configuration for serving static files
-    STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+    # Use CompressedStaticFilesStorage instead of Manifest (simpler, doesn't require manifest file)
+    STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
     
     # Media files (user uploads) - use S3
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'

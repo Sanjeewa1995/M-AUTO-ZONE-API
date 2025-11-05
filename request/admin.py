@@ -151,7 +151,6 @@ class VehiclePartRequestAdmin(admin.ModelAdmin):
             message_parts = [
                 "🚗 *Vehicle Part Request*",
                 "",
-                f"*Vehicle:* {req.vehicle_display}",
                 f"*Part Name:* {req.part_name}",
             ]
             

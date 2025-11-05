@@ -116,6 +116,10 @@ jobs:
             -e AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}" \
             -e AWS_STORAGE_BUCKET_NAME="vehicle-parts-api-malaka-1761402802" \
             -e AWS_S3_REGION_NAME="ap-southeast-2" \
+            -e TWILIO_WHATSAPP_ENABLED="True" \
+            -e TWILIO_ACCOUNT_SID="${{ secrets.TWILIO_ACCOUNT_SID }}" \
+            -e TWILIO_AUTH_TOKEN="${{ secrets.TWILIO_AUTH_TOKEN }}" \
+            -e TWILIO_WHATSAPP_FROM="${{ secrets.TWILIO_WHATSAPP_FROM }}" \
             vehicle-parts-api
           
           # Wait for container to start
