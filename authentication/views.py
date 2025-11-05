@@ -18,7 +18,7 @@ from .serializers import (
     OTPVerificationSerializer,
     ChangePasswordSerializer
 )
-from .utils import APIResponse
+from common.utils import APIResponse
 
 
 class RegisterView(generics.CreateAPIView):

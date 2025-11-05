@@ -60,6 +60,8 @@ INSTALLED_APPS = [
     'storages',  # For AWS S3 storage
     'authentication',  # Our authentication app
     'request',  # Our request app
+    'store',  # Our store app
+    'common',  # Common utilities shared across apps
 ]
 
 MIDDLEWARE = [
@@ -212,9 +214,8 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
     ],
-    'EXCEPTION_HANDLER': 'authentication.utils.handle_api_exception',
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 20,
+    'EXCEPTION_HANDLER': 'common.utils.handle_api_exception',
+    'DEFAULT_PAGINATION_CLASS': 'common.utils.CustomPageNumberPagination',
     'DEFAULT_FILTER_BACKENDS': [
         'django_filters.rest_framework.DjangoFilterBackend',
         'rest_framework.filters.SearchFilter',
@@ -266,4 +267,10 @@ else:
     STATIC_ROOT = BASE_DIR / 'staticfiles'
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
+
+# WhatsApp Configuration (Twilio)
+TWILIO_WHATSAPP_ENABLED = config('TWILIO_WHATSAPP_ENABLED', default=False, cast=bool)
+TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID', default='')
+TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN', default='')
+TWILIO_WHATSAPP_FROM = config('TWILIO_WHATSAPP_FROM', default='whatsapp:+14155238886')
 

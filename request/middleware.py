@@ -6,7 +6,7 @@ Handles compression of uploaded files before they reach the views
 import logging
 from django.core.files.uploadedfile import UploadedFile
 from django.core.files.base import ContentFile
-from .compression_utils import (
+from .utils.compression_utils import (
     ImageCompressor, 
     VideoCompressor, 
     FileSizeValidator

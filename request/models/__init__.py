@@ -1,0 +1,1 @@
+from .vehicle_part_request_model import VehiclePartRequest

@@ -187,3 +187,8 @@ This project is licensed under the MIT License.
 # Trigger deployment with S3 region fix
 # Force deployment
 # Clean deployment - Sun Oct 26 14:35:45 +0530 2025
+
+<!-- Comands -->
+# source venv/bin/activate  
+# pip install -r requirements.txt
+# python manage.py runserver

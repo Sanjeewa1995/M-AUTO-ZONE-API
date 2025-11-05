@@ -2,7 +2,7 @@ from django.db import models
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.core.files.uploadedfile import UploadedFile
-from .compression_utils import (
+from ..utils import (
     compress_vehicle_image, 
     compress_part_image, 
     compress_part_video,
@@ -111,11 +111,6 @@ class VehiclePartRequest(models.Model):
     
     def __str__(self):
         return f"{self.vehicle_model} ({self.vehicle_year}) - {self.part_name}"
-    
-    @property
-    def vehicle_display(self):
-        """Return formatted vehicle information"""
-        return f"{self.get_vehicle_type_display()} {self.vehicle_model} ({self.vehicle_year})"
     
     def clean(self):
         """Validate model fields"""

@@ -1,0 +1,95 @@
+{% extends "admin/base_site.html" %}
+{% load i18n admin_urls static admin_modify %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+<a href="{% url 'admin:index' %}">{% trans 'Home' %}</a>
+&rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+&rsaquo; <a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+&rsaquo; {% trans 'Assign Shops' %}
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Assign Shops to Selected Requests</h1>
+<p>The following {{ selected|length }} request(s) will be assigned to the selected shops:</p>
+
+<ul>
+{% for obj in selected %}
+    <li><strong>{{ obj }}</strong> - {{ obj.vehicle_display }} | Part: {{ obj.part_name }}</li>
+{% endfor %}
+</ul>
+
+<form method="post">
+    {% csrf_token %}
+    
+    {% if form.errors %}
+        <ul class="errorlist">
+            {% for field, errors in form.errors.items %}
+                {% for error in errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            {% endfor %}
+        </ul>
+    {% endif %}
+    
+    <fieldset class="module aligned">
+        <h2>Select Shops</h2>
+        <div class="form-row">
+            <div>
+                {{ form.shops.label_tag }}
+                {{ form.shops }}
+                {% if form.shops.help_text %}
+                    <p class="help">{{ form.shops.help_text }}</p>
+                {% endif %}
+                {% if form.shops.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.shops.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div>
+                {{ form.custom_message.label_tag }}
+                {{ form.custom_message }}
+                {% if form.custom_message.help_text %}
+                    <p class="help">{{ form.custom_message.help_text }}</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="form-row">
+            <div>
+                {{ form.send_whatsapp.label_tag }}
+                {{ form.send_whatsapp }}
+                {% if form.send_whatsapp.help_text %}
+                    <p class="help" style="{% if '⚠️' in form.send_whatsapp.help_text %}color: #ff9800; font-weight: bold;{% endif %}">
+                        {{ form.send_whatsapp.help_text }}
+                    </p>
+                {% endif %}
+                {% if form.send_whatsapp.errors %}
+                    <ul class="errorlist">
+                        {% for error in form.send_whatsapp.errors %}
+                            <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+    </fieldset>
+    
+    <div class="submit-row">
+        {% for id in selected_ids %}
+            <input type="hidden" name="_selected_action" value="{{ id }}">
+        {% endfor %}
+        <input type="hidden" name="action" value="assign_shops_action">
+        <input type="submit" name="apply" value="Assign Shops" class="default">
+        <a href="{% url opts|admin_urlname:'changelist' %}" class="button cancel-link">Cancel</a>
+    </div>
+</form>
+{% endblock %}
+

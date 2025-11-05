@@ -1,6 +1,7 @@
 from rest_framework import serializers
-from .models import VehiclePartRequest
+from request.models import VehiclePartRequest
 from authentication.serializers import UserSerializer
+from store.serializers import ProductSerializer
 
 
 class VehiclePartRequestSerializer(serializers.ModelSerializer):
@@ -8,8 +9,8 @@ class VehiclePartRequestSerializer(serializers.ModelSerializer):
     Serializer for VehiclePartRequest model
     """
     user = UserSerializer(read_only=True)
-    vehicle_display = serializers.ReadOnlyField()
-    
+    products = ProductSerializer(many=True, read_only=True)
+
     class Meta:
         model = VehiclePartRequest
         fields = [
@@ -25,19 +26,11 @@ class VehiclePartRequestSerializer(serializers.ModelSerializer):
             'description',
             'status',
             'user',
-            'vehicle_display',
+            'products',
             'created_at',
             'updated_at'
         ]
         read_only_fields = ['id', 'user', 'created_at', 'updated_at']
-    
-    def create(self, validated_data):
-        """
-        Create a new vehicle part request
-        """
-        # Set the user from the request context
-        validated_data['user'] = self.context['request'].user
-        return super().create(validated_data)
 
 
 class VehiclePartRequestCreateSerializer(serializers.ModelSerializer):
@@ -57,7 +50,7 @@ class VehiclePartRequestCreateSerializer(serializers.ModelSerializer):
             'part_video',
             'description'
         ]
-    
+
     def create(self, validated_data):
         """
         Create a new vehicle part request
@@ -65,14 +58,14 @@ class VehiclePartRequestCreateSerializer(serializers.ModelSerializer):
         # Set the user from the request context
         validated_data['user'] = self.context['request'].user
         return super().create(validated_data)
-    
+
     def validate_vehicle_year(self, value):
         """
         Validate vehicle year
         """
         from datetime import datetime
         current_year = datetime.now().year
-        
+
         if value < 1900 or value > current_year + 1:
             raise serializers.ValidationError(
                 f"Vehicle year must be between 1900 and {current_year + 1}"
@@ -99,14 +92,14 @@ class VehiclePartRequestUpdateSerializer(serializers.ModelSerializer):
             'status'
         ]
         read_only_fields = ['user']
-    
+
     def validate_vehicle_year(self, value):
         """
         Validate vehicle year
         """
         from datetime import datetime
         current_year = datetime.now().year
-        
+
         if value < 1900 or value > current_year + 1:
             raise serializers.ValidationError(
                 f"Vehicle year must be between 1900 and {current_year + 1}"
