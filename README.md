@@ -192,3 +192,10 @@ This project is licensed under the MIT License.
 # source venv/bin/activate  
 # pip install -r requirements.txt
 # python manage.py runserver
+
+✅ Created new admin user
+Email: admin@example.com
+Password: admin123456
+User ID: 23
+Is Superuser: True
+Is Staff: True

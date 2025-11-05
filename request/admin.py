@@ -56,7 +56,7 @@ class VehiclePartRequestAdmin(admin.ModelAdmin):
     Admin configuration for VehiclePartRequest model
     """
     list_display = [
-        'id', 'user', 'vehicle_display', 'part_name', 
+        'id', 'user', 'part_name', 
         'status', 'created_at'
     ]
     list_filter = [
