@@ -255,10 +255,11 @@ if USE_S3 and config('AWS_ACCESS_KEY_ID', default='') and config('AWS_STORAGE_BU
     AWS_S3_ACL = None
     
     # Static files (CSS, JavaScript, Images)
-    STATICFILES_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-    STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/static/'
+    # Serve static files locally for admin styles (S3 can have permission issues)
+    STATIC_URL = '/static/'
+    STATIC_ROOT = BASE_DIR / 'staticfiles'
     
-    # Media files
+    # Media files (user uploads) - use S3
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
 else:
