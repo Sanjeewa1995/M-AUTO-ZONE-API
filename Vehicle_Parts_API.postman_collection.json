@@ -1743,6 +1743,652 @@
 				}
 			],
 			"description": "Product endpoints for listing and retrieving products. Only shows products from user's vehicle part requests."
+		},
+		{
+			"name": "Carts",
+			"item": [
+				{
+					"name": "Create Cart",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/store/carts/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"store",
+								"carts",
+								""
+							]
+						},
+						"description": "Create a new cart with auto-generated session_id. No body required."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/store/carts/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"store",
+										"carts",
+										""
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Cart created successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"session_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n        \"created_at\": \"2025-11-08T20:40:00Z\",\n        \"updated_at\": \"2025-11-08T20:40:00Z\"\n    },\n    \"status_code\": 201\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Cart",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/store/carts/1/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"store",
+								"carts",
+								"1",
+								""
+							]
+						},
+						"description": "Get details of a specific cart by ID"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/store/carts/1/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"store",
+										"carts",
+										"1",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Cart retrieved successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"session_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n        \"created_at\": \"2025-11-08T20:40:00Z\",\n        \"updated_at\": \"2025-11-08T20:40:00Z\"\n    },\n    \"status_code\": 200\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Cart",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/store/carts/1/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"store",
+								"carts",
+								"1",
+								""
+							]
+						},
+						"description": "Update a cart (full update). Note: Cart fields are mostly read-only."
+					},
+					"response": []
+				},
+				{
+					"name": "Partial Update Cart",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/store/carts/1/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"store",
+								"carts",
+								"1",
+								""
+							]
+						},
+						"description": "Partially update a cart. Note: Cart fields are mostly read-only."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Cart",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/store/carts/1/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"store",
+								"carts",
+								"1",
+								""
+							]
+						},
+						"description": "Delete a cart and all its items"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/store/carts/1/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"store",
+										"carts",
+										"1",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Cart deleted successfully\",\n    \"status_code\": 200\n}"
+						}
+					]
+				}
+			],
+			"description": "Cart endpoints for managing shopping carts. Carts are session-based and don't require authentication."
+		},
+		{
+			"name": "Cart Items",
+			"item": [
+				{
+					"name": "List Cart Items",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/store/cart-items/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"store",
+								"cart-items",
+								""
+							]
+						},
+						"description": "List all cart items"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/store/cart-items/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"store",
+										"cart-items",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Cart items retrieved successfully\",\n    \"data\": [\n        {\n            \"id\": 1,\n            \"cart\": {\n                \"id\": 1,\n                \"session_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n                \"created_at\": \"2025-11-08T20:40:00Z\",\n                \"updated_at\": \"2025-11-08T20:40:00Z\"\n            },\n            \"product\": {\n                \"id\": 1,\n                \"name\": \"Brake Pad Set\",\n                \"description\": \"High-quality brake pad set\",\n                \"price\": \"89.99\",\n                \"image_url\": \"http://localhost:8000/media/product_images/brake_pad.jpg\",\n                \"created_at\": \"2025-11-08T10:30:00Z\",\n                \"updated_at\": \"2025-11-08T10:30:00Z\"\n            },\n            \"quantity\": 2,\n            \"created_at\": \"2025-11-08T20:45:00Z\",\n            \"updated_at\": \"2025-11-08T20:45:00Z\"\n        }\n    ],\n    \"status_code\": 200\n}"
+						}
+					]
+				},
+				{
+					"name": "Create Cart Item",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"cart_id\": 1,\n    \"product_id\": 1,\n    \"quantity\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/store/cart-items/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"store",
+								"cart-items",
+								""
+							]
+						},
+						"description": "Add a product to a cart. If the product already exists in the cart, the quantity will be incremented."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"cart_id\": 1,\n    \"product_id\": 1,\n    \"quantity\": 2\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/store/cart-items/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"store",
+										"cart-items",
+										""
+									]
+								}
+							},
+							"status": "Created",
+							"code": 201,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Cart item added successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"cart\": {\n            \"id\": 1,\n            \"session_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n            \"created_at\": \"2025-11-08T20:40:00Z\",\n            \"updated_at\": \"2025-11-08T20:40:00Z\"\n        },\n        \"product\": {\n            \"id\": 1,\n            \"name\": \"Brake Pad Set\",\n            \"description\": \"High-quality brake pad set\",\n            \"price\": \"89.99\",\n            \"image_url\": \"http://localhost:8000/media/product_images/brake_pad.jpg\",\n            \"created_at\": \"2025-11-08T10:30:00Z\",\n            \"updated_at\": \"2025-11-08T10:30:00Z\"\n        },\n        \"quantity\": 2,\n        \"created_at\": \"2025-11-08T20:45:00Z\",\n        \"updated_at\": \"2025-11-08T20:45:00Z\"\n    },\n    \"status_code\": 201\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Cart Item",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/store/cart-items/1/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"store",
+								"cart-items",
+								"1",
+								""
+							]
+						},
+						"description": "Get details of a specific cart item by ID"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/store/cart-items/1/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"store",
+										"cart-items",
+										"1",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Cart item retrieved successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"cart\": {\n            \"id\": 1,\n            \"session_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n            \"created_at\": \"2025-11-08T20:40:00Z\",\n            \"updated_at\": \"2025-11-08T20:40:00Z\"\n        },\n        \"product\": {\n            \"id\": 1,\n            \"name\": \"Brake Pad Set\",\n            \"description\": \"High-quality brake pad set\",\n            \"price\": \"89.99\",\n            \"image_url\": \"http://localhost:8000/media/product_images/brake_pad.jpg\",\n            \"created_at\": \"2025-11-08T10:30:00Z\",\n            \"updated_at\": \"2025-11-08T10:30:00Z\"\n        },\n        \"quantity\": 2,\n        \"created_at\": \"2025-11-08T20:45:00Z\",\n        \"updated_at\": \"2025-11-08T20:45:00Z\"\n    },\n    \"status_code\": 200\n}"
+						}
+					]
+				},
+				{
+					"name": "Update Cart Item",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"quantity\": 5\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/store/cart-items/1/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"store",
+								"cart-items",
+								"1",
+								""
+							]
+						},
+						"description": "Update a cart item (full update). Requires all fields."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "PUT",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"quantity\": 5\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/store/cart-items/1/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"store",
+										"cart-items",
+										"1",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Cart item updated successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"cart\": {\n            \"id\": 1,\n            \"session_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n            \"created_at\": \"2025-11-08T20:40:00Z\",\n            \"updated_at\": \"2025-11-08T20:40:00Z\"\n        },\n        \"product\": {\n            \"id\": 1,\n            \"name\": \"Brake Pad Set\",\n            \"description\": \"High-quality brake pad set\",\n            \"price\": \"89.99\",\n            \"image_url\": \"http://localhost:8000/media/product_images/brake_pad.jpg\",\n            \"created_at\": \"2025-11-08T10:30:00Z\",\n            \"updated_at\": \"2025-11-08T10:30:00Z\"\n        },\n        \"quantity\": 5,\n        \"created_at\": \"2025-11-08T20:45:00Z\",\n        \"updated_at\": \"2025-11-08T20:50:00Z\"\n    },\n    \"status_code\": 200\n}"
+						}
+					]
+				},
+				{
+					"name": "Partial Update Cart Item",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"quantity\": 3\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/store/cart-items/1/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"store",
+								"cart-items",
+								"1",
+								""
+							]
+						},
+						"description": "Partially update a cart item (e.g., update quantity only)"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "PATCH",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"quantity\": 3\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/store/cart-items/1/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"store",
+										"cart-items",
+										"1",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Cart item updated successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"cart\": {\n            \"id\": 1,\n            \"session_id\": \"550e8400-e29b-41d4-a716-446655440000\",\n            \"created_at\": \"2025-11-08T20:40:00Z\",\n            \"updated_at\": \"2025-11-08T20:40:00Z\"\n        },\n        \"product\": {\n            \"id\": 1,\n            \"name\": \"Brake Pad Set\",\n            \"description\": \"High-quality brake pad set\",\n            \"price\": \"89.99\",\n            \"image_url\": \"http://localhost:8000/media/product_images/brake_pad.jpg\",\n            \"created_at\": \"2025-11-08T10:30:00Z\",\n            \"updated_at\": \"2025-11-08T10:30:00Z\"\n        },\n        \"quantity\": 3,\n        \"created_at\": \"2025-11-08T20:45:00Z\",\n        \"updated_at\": \"2025-11-08T20:50:00Z\"\n    },\n    \"status_code\": 200\n}"
+						}
+					]
+				},
+				{
+					"name": "Delete Cart Item",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/v1/store/cart-items/1/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"store",
+								"cart-items",
+								"1",
+								""
+							]
+						},
+						"description": "Remove a product from a cart"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/api/v1/store/cart-items/1/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"store",
+										"cart-items",
+										"1",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Cart item deleted successfully\",\n    \"status_code\": 200\n}"
+						}
+					]
+				}
+			],
+			"description": "Cart Item endpoints for managing products in shopping carts. Cart items link products to carts with quantities."
 		}
 	],
 	"event": [
