@@ -305,8 +305,16 @@
 							{
 								"key": "Authorization",
 								"value": "Bearer {{access_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
 							}
 						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}"
+						},
 						"url": {
 							"raw": "{{base_url}}/api/v1/auth/logout/",
 							"host": [
@@ -320,7 +328,7 @@
 								""
 							]
 						},
-						"description": "Logout user and blacklist refresh token"
+						"description": "Logout user and blacklist refresh token. Requires refresh token in request body."
 					},
 					"response": [
 						{
@@ -357,12 +365,84 @@
 								}
 							],
 							"cookie": [],
-							"body": "{\n    \"message\": \"Logout successful\"\n}"
+							"body": "{\n    \"success\": true,\n    \"message\": \"Logout successful\",\n    \"status_code\": 200\n}"
+						}
+					]
+				},
+				{
+					"name": "Refresh Access Token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/v1/auth/refresh/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"auth",
+								"refresh",
+								""
+							]
+						},
+						"description": "Refresh access token using refresh token (custom endpoint with APIResponse format)"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "Content-Type",
+										"value": "application/json"
+									}
+								],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"refresh\": \"{{refresh_token}}\"\n}"
+								},
+								"url": {
+									"raw": "{{base_url}}/api/v1/auth/refresh/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"auth",
+										"refresh",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Token refreshed successfully\",\n    \"data\": {\n        \"access\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n    },\n    \"status_code\": 200\n}"
 						}
 					]
 				}
 			],
-			"description": "Authentication endpoints for user registration, login, profile management, and logout"
+			"description": "Authentication endpoints for user registration, login, profile management, logout, and token refresh"
 		},
 		{
 			"name": "JWT Token Management",
@@ -1497,6 +1577,172 @@
 				}
 			],
 			"description": "Health check endpoints to verify API status"
+		},
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "List Products",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/store/products/?page=1&page_size=10&request=1&search=brake&ordering=-created_at",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"store",
+								"products",
+								""
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1",
+									"description": "Page number for pagination"
+								},
+								{
+									"key": "page_size",
+									"value": "10",
+									"description": "Number of items per page"
+								},
+								{
+									"key": "request",
+									"value": "1",
+									"description": "Filter by request ID",
+									"disabled": true
+								},
+								{
+									"key": "search",
+									"value": "brake",
+									"description": "Search in name and description",
+									"disabled": true
+								},
+								{
+									"key": "ordering",
+									"value": "-created_at",
+									"description": "Order by field (created_at, updated_at, price). Use - for descending",
+									"disabled": true
+								}
+							]
+						},
+						"description": "List all products with filtering, searching, and pagination. Only shows products from user's requests."
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/store/products/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"store",
+										"products",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Products retrieved successfully\",\n    \"data\": {\n        \"count\": 10,\n        \"next\": \"http://localhost:8000/api/v1/store/products/?page=2\",\n        \"previous\": null,\n        \"results\": [\n            {\n                \"id\": 1,\n                \"name\": \"Brake Pad Set\",\n                \"description\": \"High-quality brake pad set for Toyota Camry\",\n                \"price\": \"89.99\",\n                \"image\": \"/media/product_images/brake_pad.jpg\",\n                \"image_url\": \"http://localhost:8000/media/product_images/brake_pad.jpg\",\n                \"created_at\": \"2025-11-08T10:30:00Z\",\n                \"updated_at\": \"2025-11-08T10:30:00Z\"\n            }\n        ]\n    }\n}"
+						}
+					]
+				},
+				{
+					"name": "Get Product Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{access_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/v1/store/products/1/",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"v1",
+								"store",
+								"products",
+								"1",
+								""
+							]
+						},
+						"description": "Get details of a specific product by ID"
+					},
+					"response": [
+						{
+							"name": "Success Response",
+							"originalRequest": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "Authorization",
+										"value": "Bearer {{access_token}}"
+									}
+								],
+								"url": {
+									"raw": "{{base_url}}/api/v1/store/products/1/",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"api",
+										"v1",
+										"store",
+										"products",
+										"1",
+										""
+									]
+								}
+							},
+							"status": "OK",
+							"code": 200,
+							"_postman_previewlanguage": "json",
+							"header": [
+								{
+									"key": "Content-Type",
+									"value": "application/json"
+								}
+							],
+							"cookie": [],
+							"body": "{\n    \"success\": true,\n    \"message\": \"Product retrieved successfully\",\n    \"data\": {\n        \"id\": 1,\n        \"name\": \"Brake Pad Set\",\n        \"description\": \"High-quality brake pad set for Toyota Camry\",\n        \"price\": \"89.99\",\n        \"image\": \"/media/product_images/brake_pad.jpg\",\n        \"image_url\": \"http://localhost:8000/media/product_images/brake_pad.jpg\",\n        \"created_at\": \"2025-11-08T10:30:00Z\",\n        \"updated_at\": \"2025-11-08T10:30:00Z\"\n    }\n}"
+						}
+					]
+				}
+			],
+			"description": "Product endpoints for listing and retrieving products. Only shows products from user's vehicle part requests."
 		}
 	],
 	"event": [
