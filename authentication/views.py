@@ -7,6 +7,7 @@ from django.core.mail import send_mail
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
+import logging
 from .models import User
 from .serializers import (
     UserRegistrationSerializer,
@@ -87,15 +88,41 @@ def logout_view(request):
     """
     Logout user by blacklisting the refresh token
     """
+    # Check if refresh token is provided
+    if 'refresh' not in request.data or not request.data.get('refresh'):
+        return APIResponse.error(
+            message='Refresh token is required',
+            error_code='REFRESH_TOKEN_REQUIRED',
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
+    
     try:
         refresh_token = request.data["refresh"]
         token = RefreshToken(refresh_token)
         token.blacklist()
         return APIResponse.success(message='Logout successful')
-    except Exception as e:
+    except (KeyError, TypeError):
         return APIResponse.error(
-            message='Invalid token',
-            error_code='INVALID_TOKEN'
+            message='Refresh token is required',
+            error_code='REFRESH_TOKEN_REQUIRED',
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
+    except Exception as e:
+        # Handle token errors (invalid, expired, already blacklisted, etc.)
+        error_message = str(e).lower()
+        if 'token' in error_message or 'invalid' in error_message or 'expired' in error_message or 'blacklist' in error_message:
+            return APIResponse.error(
+                message='Invalid or expired refresh token. Please login again.',
+                error_code='INVALID_TOKEN',
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+        # Log the actual error for debugging
+        logger = logging.getLogger(__name__)
+        logger.error(f'Logout error: {str(e)}', exc_info=True)
+        return APIResponse.error(
+            message='Logout failed. Please try again.',
+            error_code='LOGOUT_FAILED',
+            status_code=status.HTTP_400_BAD_REQUEST
         )
 
 
@@ -137,6 +164,14 @@ def refresh_token_view(request):
     """
     Refresh JWT access token
     """
+    # Check if refresh token is provided
+    if 'refresh' not in request.data or not request.data.get('refresh'):
+        return APIResponse.error(
+            message='Refresh token is required',
+            error_code='REFRESH_TOKEN_REQUIRED',
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
+    
     try:
         refresh_token = request.data['refresh']
         token = RefreshToken(refresh_token)
@@ -144,10 +179,28 @@ def refresh_token_view(request):
             data={'access': str(token.access_token)},
             message='Token refreshed successfully'
         )
-    except Exception as e:
+    except (KeyError, TypeError):
         return APIResponse.error(
-            message='Invalid refresh token',
-            error_code='INVALID_REFRESH_TOKEN'
+            message='Refresh token is required',
+            error_code='REFRESH_TOKEN_REQUIRED',
+            status_code=status.HTTP_400_BAD_REQUEST
+        )
+    except Exception as e:
+        # Handle token errors (invalid, expired, already blacklisted, etc.)
+        error_message = str(e).lower()
+        if 'token' in error_message or 'invalid' in error_message or 'expired' in error_message or 'blacklist' in error_message:
+            return APIResponse.error(
+                message='Invalid or expired refresh token. Please login again.',
+                error_code='INVALID_REFRESH_TOKEN',
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+        # Log the actual error for debugging
+        logger = logging.getLogger(__name__)
+        logger.error(f'Token refresh error: {str(e)}', exc_info=True)
+        return APIResponse.error(
+            message='Token refresh failed. Please try again.',
+            error_code='REFRESH_FAILED',
+            status_code=status.HTTP_400_BAD_REQUEST
         )
 
 

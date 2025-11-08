@@ -10,6 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
+from datetime import timedelta
+import pymysql
 from pathlib import Path
 from decouple import config
 import os
@@ -27,12 +29,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = config('SECRET_KEY', default='django-insecure-change-this-in-production')
+SECRET_KEY = config(
+    'SECRET_KEY', default='django-insecure-change-this-in-production')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1', cast=lambda v: [s.strip() for s in v.split(',')])
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1',
+                       cast=lambda v: [s.strip() for s in v.split(',')])
 
 # Production security settings
 if not DEBUG:
@@ -55,6 +59,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
     'storages',  # For AWS S3 storage
@@ -117,7 +122,6 @@ DATABASES = {
 }
 
 # Configure PyMySQL to work with Django
-import pymysql
 pymysql.install_as_MySQLdb()
 
 
@@ -167,7 +171,6 @@ AUTH_USER_MODEL = 'authentication.User'
 # Django REST Framework settings (moved to global exception handler section)
 
 # JWT Settings
-from datetime import timedelta
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
@@ -207,6 +210,7 @@ CORS_ALLOW_CREDENTIALS = True
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework_simplejwt.authentication.JWTTokenUserAuthentication',
         'rest_framework.authentication.SessionAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
@@ -225,13 +229,15 @@ REST_FRAMEWORK = {
 }
 
 # Email Configuration
-EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
+EMAIL_BACKEND = config(
+    'EMAIL_BACKEND', default='django.core.mail.backends.console.EmailBackend')
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='malakasanjeewa1995@gmail.com')
+DEFAULT_FROM_EMAIL = config(
+    'DEFAULT_FROM_EMAIL', default='malakasanjeewa1995@gmail.com')
 
 # AWS S3 Configuration
 USE_S3 = config('USE_S3', default=False, cast=bool)
@@ -254,16 +260,16 @@ if USE_S3 and config('AWS_ACCESS_KEY_ID', default='') and config('AWS_STORAGE_BU
     AWS_S3_USE_SSL = True
     AWS_S3_IGNORE_ACL = True
     AWS_S3_ACL = None
-    
+
     # Static files (CSS, JavaScript, Images)
     # Serve static files locally for admin styles (S3 can have permission issues)
     STATIC_URL = '/static/'
     STATIC_ROOT = BASE_DIR / 'staticfiles'
-    
+
     # WhiteNoise configuration for serving static files
     # Use CompressedStaticFilesStorage instead of Manifest (simpler, doesn't require manifest file)
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
-    
+
     # Media files (user uploads) - use S3
     DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
@@ -275,8 +281,9 @@ else:
     MEDIA_ROOT = BASE_DIR / 'media'
 
 # WhatsApp Configuration (Twilio)
-TWILIO_WHATSAPP_ENABLED = config('TWILIO_WHATSAPP_ENABLED', default=False, cast=bool)
+TWILIO_WHATSAPP_ENABLED = config(
+    'TWILIO_WHATSAPP_ENABLED', default=False, cast=bool)
 TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID', default='')
 TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN', default='')
-TWILIO_WHATSAPP_FROM = config('TWILIO_WHATSAPP_FROM', default='whatsapp:+14155238886')
-
+TWILIO_WHATSAPP_FROM = config(
+    'TWILIO_WHATSAPP_FROM', default='whatsapp:+14155238886')
