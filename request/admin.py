@@ -169,6 +169,9 @@ class VehiclePartRequestAdmin(admin.ModelAdmin):
             
             full_message = "\n".join(message_parts)
             
+            # Track if any WhatsApp message was successfully sent for this request
+            request_whatsapp_sent = False
+            
             # Create RequestHasShop entries for each shop
             for shop in shops:
                 obj, created = RequestHasShop.objects.get_or_create(
@@ -192,6 +195,7 @@ class VehiclePartRequestAdmin(admin.ModelAdmin):
                     )
                     if whatsapp_result['success']:
                         whatsapp_sent += 1
+                        request_whatsapp_sent = True
                     else:
                         whatsapp_failed += 1
                         error_msg = whatsapp_result['message']
@@ -214,6 +218,11 @@ class VehiclePartRequestAdmin(admin.ModelAdmin):
                         f'Cannot send WhatsApp to {shop.name}: Phone number not set. '
                         f'Please add a phone number in E.164 format (e.g., +1234567890) to the shop profile.'
                     )
+            
+            # Update request status to 'in_progress' if WhatsApp messages were sent successfully
+            if send_whatsapp and request_whatsapp_sent and req.status == 'pending':
+                req.status = 'in_progress'
+                req.save(update_fields=['status'])
         
         if success_count > 0:
             messages.success(

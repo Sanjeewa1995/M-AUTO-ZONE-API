@@ -65,7 +65,7 @@ INSTALLED_APPS = [
     'storages',  # For AWS S3 storage
     'authentication',  # Our authentication app
     'request',  # Our request app
-    'store',  # Our store app
+    'store.apps.StoreConfig',  # Our store app
     'common',  # Common utilities shared across apps
 ]
 
