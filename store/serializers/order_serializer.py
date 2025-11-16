@@ -75,6 +75,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'reference_number',
             'source',
             'status',
+            'user',
             'shipping_address',
             'cart',
             'cart_id',
@@ -82,7 +83,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at'
         ]
-        read_only_fields = ['id', 'reference_number', 'status', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'reference_number', 'status', 'user', 'created_at', 'updated_at']
 
 
 class CreateOrderSerializer(serializers.Serializer):
@@ -165,6 +166,9 @@ class CreateOrderSerializer(serializers.Serializer):
         while Order.objects.filter(reference_number=reference_number).exists():
             reference_number = f"ORD-{uuid.uuid4().hex[:12].upper()}"
         
+        # Get user from context (request.user)
+        user = self.context.get('request').user if self.context.get('request') else None
+        
         # Create order
         order = Order.objects.create(
             total=total,
@@ -172,6 +176,7 @@ class CreateOrderSerializer(serializers.Serializer):
             reference_number=reference_number,
             source=source,
             status='pending',
+            user=user,
             shipping_address=shipping_address,
             cart=cart
         )

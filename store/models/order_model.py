@@ -1,6 +1,9 @@
 from django.db import models
 from django.core.validators import MinValueValidator
+from django.contrib.auth import get_user_model
 from decimal import Decimal
+
+User = get_user_model()
 
 
 class Order(models.Model):
@@ -45,6 +48,12 @@ class Order(models.Model):
         default='pending',
         help_text="Current status of the order"
     )
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='orders',
+        help_text="User who placed this order"
+    )
     shipping_address = models.ForeignKey(
         'store.Address',
         on_delete=models.CASCADE,
@@ -71,6 +80,7 @@ class Order(models.Model):
             models.Index(fields=['reference_number']),
             models.Index(fields=['status']),
             models.Index(fields=['source']),
+            models.Index(fields=['user']),
         ]
 
     def __str__(self):
