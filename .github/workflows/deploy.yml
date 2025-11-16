@@ -120,6 +120,7 @@ jobs:
             -e TWILIO_ACCOUNT_SID="${{ secrets.TWILIO_ACCOUNT_SID }}" \
             -e TWILIO_AUTH_TOKEN="${{ secrets.TWILIO_AUTH_TOKEN }}" \
             -e TWILIO_WHATSAPP_FROM="${{ secrets.TWILIO_WHATSAPP_FROM }}" \
+            -e TWILIO_ENVIRONMENT="sandbox" \
             vehicle-parts-api
           
           # Wait for container to start

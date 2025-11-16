@@ -285,5 +285,12 @@ TWILIO_WHATSAPP_ENABLED = config(
     'TWILIO_WHATSAPP_ENABLED', default=False, cast=bool)
 TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID', default='')
 TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN', default='')
+# Twilio Environment: 'sandbox' or 'production'
+# Sandbox: Use for testing with Twilio WhatsApp Sandbox (limited to pre-approved numbers)
+# Production: Use your approved WhatsApp Business number from Twilio
+TWILIO_ENVIRONMENT = config('TWILIO_ENVIRONMENT', default='sandbox')
+# WhatsApp From Number:
+# Sandbox: whatsapp:+14155238886 (Twilio's sandbox number)
+# Production: whatsapp:+1234567890 (Your approved WhatsApp Business number from Twilio)
 TWILIO_WHATSAPP_FROM = config(
     'TWILIO_WHATSAPP_FROM', default='whatsapp:+14155238886')

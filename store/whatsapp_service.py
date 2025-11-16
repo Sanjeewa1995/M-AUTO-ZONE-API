@@ -24,6 +24,7 @@ class WhatsAppService:
         else:
             self.whatsapp_from = whatsapp_from_raw
         self.enabled = getattr(settings, 'TWILIO_WHATSAPP_ENABLED', False)
+        self.environment = getattr(settings, 'TWILIO_ENVIRONMENT', 'sandbox').lower()
         
         if self.enabled and self.account_sid and self.auth_token:
             try:
@@ -93,12 +94,23 @@ class WhatsAppService:
             
             # Provide helpful guidance for common errors
             if '21212' in error_str or "not a valid phone number" in error_str.lower() or "not a valid" in error_str.lower():
+                if self.environment == 'sandbox':
+                    error_message = (
+                        f'Invalid WhatsApp "From" number: {self.whatsapp_from}. '
+                        f'For SANDBOX mode, use: whatsapp:+14155238886. '
+                        f'Also ensure the recipient has joined your Twilio WhatsApp Sandbox. '
+                        f'To join, send "join <your-sandbox-keyword>" to +1 415 523 8886.'
+                    )
+                else:
+                    error_message = (
+                        f'Invalid WhatsApp "From" number: {self.whatsapp_from}. '
+                        f'For PRODUCTION mode, verify your TWILIO_WHATSAPP_FROM in your .env file. '
+                        f'It must be your approved WhatsApp Business number from Twilio (format: whatsapp:+1234567890). '
+                        f'Ensure your WhatsApp Business API is approved and active in your Twilio console.'
+                    )
                 return {
                     'success': False,
-                    'message': f'Invalid WhatsApp "From" number: {self.whatsapp_from}. '
-                               f'Please verify your TWILIO_WHATSAPP_FROM in your .env file. '
-                               f'For testing, you need to join Twilio WhatsApp Sandbox first. '
-                               f'For production, use your approved WhatsApp Business number.'
+                    'message': error_message
                 }
             elif '21211' in error_str or "To number" in error_str:
                 return {
