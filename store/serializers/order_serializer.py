@@ -167,7 +167,11 @@ class CreateOrderSerializer(serializers.Serializer):
             reference_number = f"ORD-{uuid.uuid4().hex[:12].upper()}"
         
         # Get user from context (request.user)
-        user = self.context.get('request').user if self.context.get('request') else None
+        request = self.context.get('request')
+        if not request or not request.user or not request.user.is_authenticated:
+            raise serializers.ValidationError("Authentication required to create an order.")
+        
+        user = request.user
         
         # Create order
         order = Order.objects.create(

@@ -21,6 +21,11 @@ from django.conf import settings
 from django.conf.urls.static import static
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
+# Customize admin site header and title
+admin.site.site_header = "M AUTO ZONE ADMIN"
+admin.site.site_title = "M AUTO ZONE ADMIN"
+admin.site.index_title = "M AUTO ZONE ADMIN"
+
 urlpatterns = [
     path('', RedirectView.as_view(url='/admin/', permanent=False), name='index'),
     path('admin/', admin.site.urls),

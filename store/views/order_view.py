@@ -34,9 +34,9 @@ class OrderViewSet(mixins.CreateModelMixin, mixins.RetrieveModelMixin, mixins.Li
     
     def get_permissions(self):
         """
-        Require authentication for list action, allow any for create/retrieve
+        Require authentication for list and create actions, allow any for retrieve
         """
-        if self.action == 'list':
+        if self.action in ['list', 'create']:
             return [IsAuthenticated()]
         return [AllowAny()]
     
