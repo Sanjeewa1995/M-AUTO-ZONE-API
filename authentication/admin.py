@@ -6,17 +6,17 @@ from .models import User
 @admin.register(User)
 class UserAdmin(UserAdmin):
     """
-    Custom User Admin with essential fields only
+    Custom User Admin with phone number as username
     """
-    list_display = ('email', 'first_name', 'last_name', 'phone', 'user_type', 'is_active', 'created_at')
+    list_display = ('phone', 'email', 'first_name', 'last_name', 'user_type', 'is_active', 'created_at')
     list_filter = ('is_active', 'is_staff', 'user_type', 'created_at')
-    search_fields = ('email', 'first_name', 'last_name', 'phone')
+    search_fields = ('phone', 'email', 'first_name', 'last_name')
     ordering = ('-created_at',)
     
     fieldsets = (
-        (None, {'fields': ('email', 'password')}),
+        (None, {'fields': ('phone', 'password')}),
         ('Personal info', {
-            'fields': ('first_name', 'last_name', 'phone', 'user_type')
+            'fields': ('first_name', 'last_name', 'email', 'user_type')
         }),
         ('Permissions', {
             'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions'),
@@ -28,7 +28,7 @@ class UserAdmin(UserAdmin):
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('email', 'first_name', 'last_name', 'phone', 'user_type', 'password1', 'password2'),
+            'fields': ('phone', 'first_name', 'last_name', 'email', 'user_type', 'password1', 'password2'),
         }),
     )
     

@@ -2,6 +2,8 @@ from rest_framework import serializers
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from .models import User
+from .validators import normalize_sri_lankan_phone, validate_sri_lankan_phone_number
+from django.core.exceptions import ValidationError
 
 
 class UserRegistrationSerializer(serializers.ModelSerializer):
@@ -10,7 +12,16 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = User
-        fields = ('email', 'first_name', 'last_name', 'phone', 'user_type', 'password', 'password_confirm')
+        fields = ('phone', 'email', 'first_name', 'last_name', 'user_type', 'password', 'password_confirm')
+    
+    def validate_phone(self, value):
+        """Validate and normalize Sri Lankan phone number"""
+        if not value:
+            raise serializers.ValidationError("Phone number is required")
+        try:
+            return validate_sri_lankan_phone_number(value)
+        except ValidationError as e:
+            raise serializers.ValidationError(str(e))
     
     def validate(self, attrs):
         if attrs['password'] != attrs['password_confirm']:
@@ -24,15 +35,24 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
 
 
 class UserLoginSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    phone = serializers.CharField()
     password = serializers.CharField()
     
+    def validate_phone(self, value):
+        """Validate and normalize Sri Lankan phone number"""
+        if not value:
+            raise serializers.ValidationError("Phone number is required")
+        try:
+            return validate_sri_lankan_phone_number(value)
+        except ValidationError as e:
+            raise serializers.ValidationError(str(e))
+    
     def validate(self, attrs):
-        email = attrs.get('email')
+        phone = attrs.get('phone')
         password = attrs.get('password')
         
-        if email and password:
-            user = authenticate(username=email, password=password)
+        if phone and password:
+            user = authenticate(username=phone, password=password)
             if not user:
                 raise serializers.ValidationError('Invalid credentials')
             if not user.is_active:
@@ -40,7 +60,7 @@ class UserLoginSerializer(serializers.Serializer):
             attrs['user'] = user
             return attrs
         else:
-            raise serializers.ValidationError('Must include email and password')
+            raise serializers.ValidationError('Must include phone number and password')
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -64,6 +84,15 @@ class UserUpdateSerializer(serializers.ModelSerializer):
         model = User
         fields = ('first_name', 'last_name', 'phone', 'user_type')
     
+    def validate_phone(self, value):
+        """Validate and normalize Sri Lankan phone number"""
+        if value:  # Phone is optional in update
+            try:
+                return validate_sri_lankan_phone_number(value)
+            except ValidationError as e:
+                raise serializers.ValidationError(str(e))
+        return value
+    
     def update(self, instance, validated_data):
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
@@ -78,19 +107,38 @@ class TokenSerializer(serializers.Serializer):
 
 
 class PasswordResetRequestSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    phone = serializers.CharField()
     
-    def validate_email(self, value):
-        if not User.objects.filter(email=value).exists():
-            raise serializers.ValidationError("User with this email does not exist")
-        return value
+    def validate_phone(self, value):
+        """Validate and normalize Sri Lankan phone number"""
+        if not value:
+            raise serializers.ValidationError("Phone number is required")
+        try:
+            return validate_sri_lankan_phone_number(value)
+        except ValidationError as e:
+            raise serializers.ValidationError(str(e))
+    
+    def validate(self, attrs):
+        phone = attrs.get('phone')
+        if not User.objects.filter(phone=phone).exists():
+            raise serializers.ValidationError("User with this phone number does not exist")
+        return attrs
 
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    phone = serializers.CharField()
     otp = serializers.CharField(max_length=6, min_length=6)
     new_password = serializers.CharField(min_length=8)
     new_password_confirm = serializers.CharField()
+    
+    def validate_phone(self, value):
+        """Validate and normalize Sri Lankan phone number"""
+        if not value:
+            raise serializers.ValidationError("Phone number is required")
+        try:
+            return validate_sri_lankan_phone_number(value)
+        except ValidationError as e:
+            raise serializers.ValidationError(str(e))
     
     def validate(self, attrs):
         if attrs['new_password'] != attrs['new_password_confirm']:
@@ -104,8 +152,17 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
 
 
 class OTPVerificationSerializer(serializers.Serializer):
-    email = serializers.EmailField()
+    phone = serializers.CharField()
     otp = serializers.CharField(max_length=6, min_length=6)
+    
+    def validate_phone(self, value):
+        """Validate and normalize Sri Lankan phone number"""
+        if not value:
+            raise serializers.ValidationError("Phone number is required")
+        try:
+            return validate_sri_lankan_phone_number(value)
+        except ValidationError as e:
+            raise serializers.ValidationError(str(e))
     
     def validate_otp(self, value):
         if not value.isdigit() or len(value) != 6:

@@ -3,31 +3,33 @@ from django.db import models
 from django.core.validators import RegexValidator
 import uuid
 from django.utils import timezone
+from .validators import validate_sri_lankan_phone_number, normalize_sri_lankan_phone
 
 
 class UserManager(BaseUserManager):
-    def create_user(self, email, password=None, **extra_fields):
-        if not email:
-            raise ValueError('The Email field must be set')
-        email = self.normalize_email(email)
-        user = self.model(email=email, **extra_fields)
+    def create_user(self, phone, password=None, **extra_fields):
+        if not phone:
+            raise ValueError('The Phone number field must be set')
+        # Normalize Sri Lankan phone number to E.164 format
+        phone = normalize_sri_lankan_phone(phone)
+        user = self.model(phone=phone, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password=None, **extra_fields):
+    def create_superuser(self, phone, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        return self.create_user(email, password, **extra_fields)
+        return self.create_user(phone, password, **extra_fields)
 
 
 class User(AbstractUser):
     """
     Custom User model with essential fields only
     """
-    # Remove username field and use email as unique identifier
+    # Remove username field and use phone number as unique identifier
     username = None
-    email = models.EmailField(unique=True)
+    email = models.EmailField(blank=True, null=True, help_text="Optional email address")
     
     # Use custom manager
     objects = UserManager()
@@ -35,12 +37,9 @@ class User(AbstractUser):
     last_name = models.CharField(max_length=150)
     phone = models.CharField(
         max_length=15,
-        blank=True,
-        null=True,
-        validators=[RegexValidator(
-            regex=r'^\+?1?\d{9,15}$',
-            message="Phone number must be entered in the format: '+999999999'. Up to 15 digits allowed."
-        )]
+        unique=True,
+        validators=[validate_sri_lankan_phone_number],
+        help_text="Sri Lankan phone number used for login (E.164 format: +94771234567 or local: 0771234567)"
     )
     
     # User type choices
@@ -68,8 +67,8 @@ class User(AbstractUser):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     
-    # Use email as the username field
-    USERNAME_FIELD = 'email'
+    # Use phone number as the username field
+    USERNAME_FIELD = 'phone'
     REQUIRED_FIELDS = ['first_name', 'last_name']
     
     class Meta:
@@ -78,7 +77,8 @@ class User(AbstractUser):
         verbose_name_plural = 'Users'
     
     def __str__(self):
-        return f"{self.email} ({self.get_full_name()})"
+        email_part = f" - {self.email}" if self.email else ""
+        return f"{self.phone}{email_part} ({self.get_full_name()})"
     
     @property
     def full_name(self):
