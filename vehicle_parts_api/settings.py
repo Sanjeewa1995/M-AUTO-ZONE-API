@@ -321,7 +321,7 @@ if USE_CLOUDWATCH_LOGS and config('AWS_ACCESS_KEY_ID', default='') and config('A
             'class': 'watchtower.CloudWatchLogHandler',
             'boto3_client': cloudwatch_logs_client,
             'log_group': AWS_CLOUDWATCH_LOG_GROUP,
-            'stream_name': '{machine_name}-{program}-{logger_name}-{strftime:%Y-%m-%d}',
+            'stream_name': '{logger_name}-{strftime:%Y-%m-%d}',
             'use_queues': True,  # Use background thread for better performance
             'create_log_group': True,  # Automatically create log group if it doesn't exist
             'filters': [],
@@ -332,7 +332,7 @@ if USE_CLOUDWATCH_LOGS and config('AWS_ACCESS_KEY_ID', default='') and config('A
             'class': 'watchtower.CloudWatchLogHandler',
             'boto3_client': cloudwatch_logs_client,
             'log_group': f'{AWS_CLOUDWATCH_LOG_GROUP}-errors',
-            'stream_name': '{machine_name}-{program}-{logger_name}-{strftime:%Y-%m-%d}',
+            'stream_name': '{logger_name}-{strftime:%Y-%m-%d}',
             'use_queues': True,
             'create_log_group': True,
             'filters': [],
