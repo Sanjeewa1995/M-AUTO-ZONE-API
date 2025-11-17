@@ -121,6 +121,9 @@ jobs:
             -e TWILIO_AUTH_TOKEN="${{ secrets.TWILIO_AUTH_TOKEN }}" \
             -e TWILIO_WHATSAPP_FROM="${{ secrets.TWILIO_WHATSAPP_FROM }}" \
             -e TWILIO_ENVIRONMENT="sandbox" \
+            -e USE_CLOUDWATCH_LOGS="True" \
+            -e AWS_CLOUDWATCH_LOG_GROUP="vehicle-parts-api" \
+            -e AWS_CLOUDWATCH_REGION_NAME="ap-southeast-2" \
             vehicle-parts-api
           
           # Wait for container to start

@@ -294,3 +294,130 @@ TWILIO_ENVIRONMENT = config('TWILIO_ENVIRONMENT', default='sandbox')
 # Production: whatsapp:+1234567890 (Your approved WhatsApp Business number from Twilio)
 TWILIO_WHATSAPP_FROM = config(
     'TWILIO_WHATSAPP_FROM', default='whatsapp:+14155238886')
+
+# AWS CloudWatch Logs Configuration
+USE_CLOUDWATCH_LOGS = config('USE_CLOUDWATCH_LOGS', default=False, cast=bool)
+
+# Configure CloudWatch Logs if enabled and AWS credentials are available
+if USE_CLOUDWATCH_LOGS and config('AWS_ACCESS_KEY_ID', default='') and config('AWS_SECRET_ACCESS_KEY', default=''):
+    try:
+        import watchtower
+        import boto3
+        
+        AWS_CLOUDWATCH_LOG_GROUP = config('AWS_CLOUDWATCH_LOG_GROUP', default='vehicle-parts-api')
+        AWS_CLOUDWATCH_REGION_NAME = config('AWS_CLOUDWATCH_REGION_NAME', default=config('AWS_S3_REGION_NAME', default='us-east-1'))
+        
+        # Create boto3 client with explicit credentials
+        cloudwatch_logs_client = boto3.client(
+            'logs',
+            aws_access_key_id=config('AWS_ACCESS_KEY_ID', default=''),
+            aws_secret_access_key=config('AWS_SECRET_ACCESS_KEY', default=''),
+            region_name=AWS_CLOUDWATCH_REGION_NAME
+        )
+        
+        # CloudWatch Logs handler
+        CLOUDWATCH_HANDLER = {
+            'level': 'INFO',
+            'class': 'watchtower.CloudWatchLogHandler',
+            'boto3_client': cloudwatch_logs_client,
+            'log_group': AWS_CLOUDWATCH_LOG_GROUP,
+            'stream_name': '{hostname}-{program}-{logger_name}-{strftime:%Y-%m-%d}',
+            'use_queues': True,  # Use background thread for better performance
+            'create_log_group': True,  # Automatically create log group if it doesn't exist
+            'filters': [],
+        }
+        
+        CLOUDWATCH_ERROR_HANDLER = {
+            'level': 'ERROR',
+            'class': 'watchtower.CloudWatchLogHandler',
+            'boto3_client': cloudwatch_logs_client,
+            'log_group': f'{AWS_CLOUDWATCH_LOG_GROUP}-errors',
+            'stream_name': '{hostname}-{program}-{logger_name}-{strftime:%Y-%m-%d}',
+            'use_queues': True,
+            'create_log_group': True,
+            'filters': [],
+        }
+        
+        CLOUDWATCH_LOGGING_ENABLED = True
+    except ImportError:
+        CLOUDWATCH_LOGGING_ENABLED = False
+        print("Warning: watchtower not installed. CloudWatch logging disabled.")
+    except Exception as e:
+        CLOUDWATCH_LOGGING_ENABLED = False
+        print(f"Warning: Failed to configure CloudWatch logging: {str(e)}")
+else:
+    CLOUDWATCH_LOGGING_ENABLED = False
+
+# Logging Configuration
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {asctime} {message}',
+            'style': '{',
+        },
+        'json': {
+            'format': '{"time": "%(asctime)s", "level": "%(levelname)s", "logger": "%(name)s", "message": "%(message)s", "module": "%(module)s", "pathname": "%(pathname)s", "lineno": %(lineno)d}',
+        },
+    },
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse',
+        },
+    },
+    'handlers': {
+        'console': {
+            'level': 'DEBUG' if DEBUG else 'INFO',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'authentication': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        'common': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}
+
+# Add CloudWatch handlers if enabled
+if CLOUDWATCH_LOGGING_ENABLED:
+    LOGGING['handlers']['cloudwatch'] = CLOUDWATCH_HANDLER
+    LOGGING['handlers']['cloudwatch_errors'] = CLOUDWATCH_ERROR_HANDLER
+    
+    # Add CloudWatch to all loggers
+    for logger_name in LOGGING['loggers']:
+        if 'cloudwatch' not in LOGGING['loggers'][logger_name]['handlers']:
+            LOGGING['loggers'][logger_name]['handlers'].append('cloudwatch')
+    
+    # Add CloudWatch errors handler to error loggers
+    if 'django.request' in LOGGING['loggers']:
+        LOGGING['loggers']['django.request']['handlers'].append('cloudwatch_errors')
+    
+    # Root logger also gets CloudWatch
+    LOGGING['root']['handlers'].append('cloudwatch')

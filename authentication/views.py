@@ -18,7 +18,8 @@ from .serializers import (
     PasswordResetRequestSerializer,
     PasswordResetConfirmSerializer,
     OTPVerificationSerializer,
-    ChangePasswordSerializer
+    ChangePasswordSerializer,
+    DeleteAccountSerializer
 )
 from common.utils import APIResponse
 
@@ -407,4 +408,46 @@ def change_password_view(request):
 
     return APIResponse.success(
         message='Password changed successfully'
+    )
+
+
+@api_view(['DELETE', 'POST'])
+@permission_classes([IsAuthenticated])
+def delete_account_view(request):
+    """
+    Delete authenticated user's account
+    Requires password confirmation for security
+    """
+    serializer = DeleteAccountSerializer(
+        data=request.data, context={'request': request})
+    if not serializer.is_valid():
+        return APIResponse.validation_error(serializer.errors)
+
+    user = request.user
+    
+    # Optionally blacklist refresh token if provided
+    if 'refresh' in request.data and request.data.get('refresh'):
+        try:
+            refresh_token = request.data['refresh']
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+        except Exception as e:
+            # Log but don't fail if token blacklisting fails
+            logger = logging.getLogger(__name__)
+            logger.warning(f'Failed to blacklist token during account deletion: {str(e)}')
+    
+    # Store user info for logging before deletion
+    user_phone = user.phone
+    user_email = user.email
+    
+    # Delete the user account
+    # Related data (orders, requests) will be automatically deleted due to CASCADE
+    user.delete()
+    
+    logger = logging.getLogger(__name__)
+    logger.info(f'User account deleted: {user_phone} ({user_email})')
+    
+    return APIResponse.success(
+        message='Account deleted successfully',
+        status_code=status.HTTP_200_OK
     )
