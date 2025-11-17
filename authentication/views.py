@@ -8,6 +8,7 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 import logging
+from django.db import IntegrityError
 from .models import User
 from .serializers import (
     UserRegistrationSerializer,
@@ -35,7 +36,29 @@ class RegisterView(generics.CreateAPIView):
         if not serializer.is_valid():
             return APIResponse.validation_error(serializer.errors)
 
-        user = serializer.save()
+        try:
+            user = serializer.save()
+        except IntegrityError as exc:
+            error_message = str(exc).lower()
+            if 'users.phone' in error_message:
+                return APIResponse.error(
+                    message='Phone number already exists',
+                    error_code='DUPLICATE_PHONE',
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
+            if 'users.email' in error_message:
+                return APIResponse.error(
+                    message='Email already exists',
+                    error_code='DUPLICATE_EMAIL',
+                    status_code=status.HTTP_400_BAD_REQUEST
+                )
+            logger = logging.getLogger(__name__)
+            logger.error(f'User registration integrity error: {exc}', exc_info=True)
+            return APIResponse.error(
+                message='Unable to complete registration. Please try again.',
+                error_code='REGISTRATION_FAILED',
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
 
         # Generate tokens for the new user
         refresh = RefreshToken.for_user(user)

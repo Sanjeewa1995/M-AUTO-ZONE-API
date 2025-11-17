@@ -14,6 +14,15 @@ class UserRegistrationSerializer(serializers.ModelSerializer):
         model = User
         fields = ('phone', 'email', 'first_name', 'last_name', 'user_type', 'password', 'password_confirm')
     
+    def validate_email(self, value):
+        """Ensure email is unique when provided"""
+        if value:
+            email = value.strip().lower()
+            if User.objects.filter(email__iexact=email).exists():
+                raise serializers.ValidationError("Email already exists")
+            return email
+        return value
+    
     def validate_phone(self, value):
         """Validate and normalize Sri Lankan phone number"""
         if not value:
