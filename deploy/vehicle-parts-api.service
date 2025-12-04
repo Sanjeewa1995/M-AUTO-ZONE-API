@@ -1,0 +1,31 @@
+[Unit]
+Description=Vehicle Parts API Gunicorn daemon
+After=network.target mysql.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/vehicle-parts-api
+Environment="PATH=/var/www/vehicle-parts-api/venv/bin"
+EnvironmentFile=/var/www/vehicle-parts-api/.env
+ExecStart=/var/www/vehicle-parts-api/venv/bin/gunicorn \
+    --workers 3 \
+    --worker-class sync \
+    --worker-connections 1000 \
+    --max-requests 1000 \
+    --max-requests-jitter 100 \
+    --timeout 120 \
+    --keep-alive 5 \
+    --bind 127.0.0.1:8000 \
+    --access-logfile /var/log/vehicle-parts-api/access.log \
+    --error-logfile /var/log/vehicle-parts-api/error.log \
+    --log-level info \
+    --preload \
+    vehicle_parts_api.wsgi:application
+
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
+
