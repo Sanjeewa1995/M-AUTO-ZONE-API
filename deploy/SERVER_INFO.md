@@ -233,14 +233,15 @@ Email settings are configured in `/var/www/vehicle-parts-api/.env`:
 
 ---
 
-## ☁️ AWS Configuration (If Used)
+## ☁️ DigitalOcean Spaces Configuration (If Used)
 
-AWS settings are in `/var/www/vehicle-parts-api/.env`:
-- **USE_S3**: `False` (set to `True` to enable)
-- **AWS_ACCESS_KEY_ID**: *(Check .env file)*
-- **AWS_SECRET_ACCESS_KEY**: *(Check .env file)*
-- **AWS_STORAGE_BUCKET_NAME**: *(Check .env file)*
-- **AWS_S3_REGION_NAME**: *(Check .env file)*
+DigitalOcean Spaces settings are in `/var/www/vehicle-parts-api/.env`:
+- **USE_SPACES**: `True` (set to `False` to disable)
+- **SPACES_ACCESS_KEY_ID**: *(Check .env file)*
+- **SPACES_SECRET_ACCESS_KEY**: *(Check .env file)*
+- **SPACES_BUCKET_NAME**: *(Check .env file)*
+- **SPACES_REGION_NAME**: *(Check .env file)*
+- **SPACES_ENDPOINT_URL**: *(Check .env file)*
 
 ---
 
@@ -369,4 +370,5 @@ tar -czf media_backup_$(date +%Y%m%d).tar.gz /var/www/vehicle-parts-api/media
 ---
 
 **Note**: This document contains sensitive information. Keep it secure and do not commit to public repositories.
+
 
