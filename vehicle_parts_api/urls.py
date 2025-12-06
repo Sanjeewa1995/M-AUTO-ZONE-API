@@ -44,6 +44,6 @@ else:
     # In production, always serve static files locally (for admin styles)
     if settings.STATIC_ROOT:
         urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
-    # Serve media files in production if not using S3
-    if not settings.USE_S3 and settings.MEDIA_ROOT:
+    # Serve media files in production if not using Spaces
+    if not getattr(settings, 'USE_SPACES', False) and settings.MEDIA_ROOT:
         urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

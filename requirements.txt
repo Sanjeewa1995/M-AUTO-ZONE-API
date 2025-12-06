@@ -16,12 +16,9 @@ imageio==2.37.0
 imageio-ffmpeg==0.6.0
 numpy==2.2.6
 
-# AWS S3 storage
+# DigitalOcean Spaces storage (S3-compatible)
 boto3==1.40.59
 django-storages==1.14.6
-
-# AWS CloudWatch Logs
-watchtower==3.0.1
 
 # WhatsApp messaging
 twilio==9.4.1

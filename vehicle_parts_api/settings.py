@@ -62,7 +62,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt.token_blacklist',
     'corsheaders',
     'django_filters',
-    'storages',  # For AWS S3 storage
+    'storages',  # For DigitalOcean Spaces storage
     'authentication',  # Our authentication app
     'request',  # Our request app
     'store.apps.StoreConfig',  # Our store app
@@ -158,7 +158,7 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
-# Note: Static and media file configuration is handled in the AWS S3 section below
+# Note: Static and media file configuration is handled in the DigitalOcean Spaces section below
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
@@ -239,18 +239,24 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 DEFAULT_FROM_EMAIL = config(
     'DEFAULT_FROM_EMAIL', default='malakasanjeewa1995@gmail.com')
 
-# AWS S3 Configuration
-USE_S3 = config('USE_S3', default=False, cast=bool)
+# DigitalOcean Spaces Configuration (S3-compatible)
+USE_SPACES = config('USE_SPACES', default=False, cast=bool)
 
-# Only enable S3 if credentials are provided
-if USE_S3 and config('AWS_ACCESS_KEY_ID', default='') and config('AWS_STORAGE_BUCKET_NAME', default=''):
-    # AWS S3 settings
-    AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID', default='')
-    AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY', default='')
-    AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME', default='')
-    AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='us-east-1')
-    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
-    AWS_DEFAULT_ACL = None
+# Only enable Spaces if credentials are provided
+if USE_SPACES and config('SPACES_ACCESS_KEY_ID', default='') and config('SPACES_BUCKET_NAME', default=''):
+    # DigitalOcean Spaces settings (S3-compatible API)
+    AWS_ACCESS_KEY_ID = config('SPACES_ACCESS_KEY_ID', default='')
+    AWS_SECRET_ACCESS_KEY = config('SPACES_SECRET_ACCESS_KEY', default='')
+    AWS_STORAGE_BUCKET_NAME = config('SPACES_BUCKET_NAME', default='')
+    AWS_S3_REGION_NAME = config('SPACES_REGION_NAME', default='sgp1')
+    AWS_S3_ENDPOINT_URL = config('SPACES_ENDPOINT_URL', default=f'https://{config("SPACES_REGION_NAME", default="sgp1")}.digitaloceanspaces.com')
+    AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.{AWS_S3_REGION_NAME}.digitaloceanspaces.com'
+    
+    # Required for DigitalOcean Spaces
+    AWS_S3_ENDPOINT_URL = AWS_S3_ENDPOINT_URL
+    
+    # Set ACL to 'public-read' so files are publicly accessible
+    AWS_DEFAULT_ACL = 'public-read'
     AWS_S3_OBJECT_PARAMETERS = {
         'CacheControl': 'max-age=86400',
     }
@@ -258,11 +264,11 @@ if USE_S3 and config('AWS_ACCESS_KEY_ID', default='') and config('AWS_STORAGE_BU
     AWS_QUERYSTRING_AUTH = False
     AWS_S3_VERIFY = True
     AWS_S3_USE_SSL = True
-    AWS_S3_IGNORE_ACL = True
-    AWS_S3_ACL = None
+    AWS_S3_IGNORE_ACL = False  # Enable ACL so public-read works
+    AWS_S3_ACL = 'public-read'  # Set ACL for public read access
 
     # Static files (CSS, JavaScript, Images)
-    # Serve static files locally for admin styles (S3 can have permission issues)
+    # Serve static files locally for admin styles
     STATIC_URL = '/static/'
     STATIC_ROOT = BASE_DIR / 'staticfiles'
 
@@ -270,9 +276,13 @@ if USE_S3 and config('AWS_ACCESS_KEY_ID', default='') and config('AWS_STORAGE_BU
     # Use CompressedStaticFilesStorage instead of Manifest (simpler, doesn't require manifest file)
     STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-    # Media files (user uploads) - use S3
-    DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+    # Media files (user uploads) - use DigitalOcean Spaces
+    # Use custom storage backend for DigitalOcean Spaces
+    DEFAULT_FILE_STORAGE = 'common.storage.DigitalOceanSpacesStorage'
     MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+    
+    # Additional settings for DigitalOcean Spaces compatibility
+    AWS_S3_ADDRESSING_STYLE = 'virtual'
 else:
     # Local storage settings (for development)
     STATIC_URL = '/static/'
@@ -295,58 +305,6 @@ TWILIO_ENVIRONMENT = config('TWILIO_ENVIRONMENT', default='sandbox')
 TWILIO_WHATSAPP_FROM = config(
     'TWILIO_WHATSAPP_FROM', default='whatsapp:+14155238886')
 
-# AWS CloudWatch Logs Configuration
-USE_CLOUDWATCH_LOGS = config('USE_CLOUDWATCH_LOGS', default=False, cast=bool)
-
-# Configure CloudWatch Logs if enabled and AWS credentials are available
-if USE_CLOUDWATCH_LOGS and config('AWS_ACCESS_KEY_ID', default='') and config('AWS_SECRET_ACCESS_KEY', default=''):
-    try:
-        import watchtower
-        import boto3
-        
-        AWS_CLOUDWATCH_LOG_GROUP = config('AWS_CLOUDWATCH_LOG_GROUP', default='vehicle-parts-api')
-        AWS_CLOUDWATCH_REGION_NAME = config('AWS_CLOUDWATCH_REGION_NAME', default=config('AWS_S3_REGION_NAME', default='us-east-1'))
-        
-        # Create boto3 client with explicit credentials
-        cloudwatch_logs_client = boto3.client(
-            'logs',
-            aws_access_key_id=config('AWS_ACCESS_KEY_ID', default=''),
-            aws_secret_access_key=config('AWS_SECRET_ACCESS_KEY', default=''),
-            region_name=AWS_CLOUDWATCH_REGION_NAME
-        )
-        
-        # CloudWatch Logs handler
-        CLOUDWATCH_HANDLER = {
-            'level': 'INFO',
-            'class': 'watchtower.CloudWatchLogHandler',
-            'boto3_client': cloudwatch_logs_client,
-            'log_group': AWS_CLOUDWATCH_LOG_GROUP,
-            'stream_name': '{logger_name}-{strftime:%Y-%m-%d}',
-            'use_queues': True,  # Use background thread for better performance
-            'create_log_group': True,  # Automatically create log group if it doesn't exist
-            'filters': [],
-        }
-        
-        CLOUDWATCH_ERROR_HANDLER = {
-            'level': 'ERROR',
-            'class': 'watchtower.CloudWatchLogHandler',
-            'boto3_client': cloudwatch_logs_client,
-            'log_group': f'{AWS_CLOUDWATCH_LOG_GROUP}-errors',
-            'stream_name': '{logger_name}-{strftime:%Y-%m-%d}',
-            'use_queues': True,
-            'create_log_group': True,
-            'filters': [],
-        }
-        
-        CLOUDWATCH_LOGGING_ENABLED = True
-    except ImportError:
-        CLOUDWATCH_LOGGING_ENABLED = False
-        print("Warning: watchtower not installed. CloudWatch logging disabled.")
-    except Exception as e:
-        CLOUDWATCH_LOGGING_ENABLED = False
-        print(f"Warning: Failed to configure CloudWatch logging: {str(e)}")
-else:
-    CLOUDWATCH_LOGGING_ENABLED = False
 
 # Logging Configuration
 LOGGING = {
@@ -405,19 +363,3 @@ LOGGING = {
     },
 }
 
-# Add CloudWatch handlers if enabled
-if CLOUDWATCH_LOGGING_ENABLED:
-    LOGGING['handlers']['cloudwatch'] = CLOUDWATCH_HANDLER
-    LOGGING['handlers']['cloudwatch_errors'] = CLOUDWATCH_ERROR_HANDLER
-    
-    # Add CloudWatch to all loggers
-    for logger_name in LOGGING['loggers']:
-        if 'cloudwatch' not in LOGGING['loggers'][logger_name]['handlers']:
-            LOGGING['loggers'][logger_name]['handlers'].append('cloudwatch')
-    
-    # Add CloudWatch errors handler to error loggers
-    if 'django.request' in LOGGING['loggers']:
-        LOGGING['loggers']['django.request']['handlers'].append('cloudwatch_errors')
-    
-    # Root logger also gets CloudWatch
-    LOGGING['root']['handlers'].append('cloudwatch')
