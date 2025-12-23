@@ -57,18 +57,21 @@ class VehiclePartRequest(models.Model):
         upload_to='vehicle_images/',
         blank=True,
         null=True,
+        max_length=255,  # Increased from default 100 to support longer filenames
         help_text="Image of the vehicle"
     )
     part_image = models.ImageField(
         upload_to='part_images/',
         blank=True,
         null=True,
+        max_length=255,  # Increased from default 100 to support longer filenames
         help_text="Image of the part"
     )
     part_video = models.FileField(
         upload_to='part_videos/',
         blank=True,
         null=True,
+        max_length=255,  # Increased from default 100 to support longer filenames
         help_text="Video of the part"
     )
     
