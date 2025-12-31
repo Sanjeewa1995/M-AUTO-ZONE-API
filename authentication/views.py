@@ -3,10 +3,6 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
-from django.core.mail import send_mail
-from django.conf import settings
-from django.template.loader import render_to_string
-from django.utils.html import strip_tags
 import logging
 from django.db import IntegrityError
 from .models import User
@@ -22,6 +18,7 @@ from .serializers import (
     DeleteAccountSerializer
 )
 from common.utils import APIResponse
+from .sms_service import sms_service
 
 
 class RegisterView(generics.CreateAPIView):
@@ -232,7 +229,7 @@ def refresh_token_view(request):
 @permission_classes([AllowAny])
 def password_reset_request_view(request):
     """
-    Request password reset - send OTP via email or SMS
+    Request password reset - send OTP via SMS
     """
     serializer = PasswordResetRequestSerializer(data=request.data)
     if not serializer.is_valid():
@@ -245,60 +242,24 @@ def password_reset_request_view(request):
         # Generate OTP
         otp = user.generate_reset_otp()
 
-        # Send OTP via email if email exists, otherwise log for SMS (you can integrate SMS service here)
-        if user.email:
-            # Send OTP email
-            subject = 'Password Reset OTP - Vehicle Parts API'
-
-            # Simple email template
-            html_message = f"""
-            <html>
-            <body>
-                <h2>Password Reset OTP</h2>
-                <p>Hello {user.first_name},</p>
-                <p>You have requested to reset your password for the Vehicle Parts API.</p>
-                <p>Your OTP is: <strong style="font-size: 24px; color: #007bff;">{otp}</strong></p>
-                <p>This OTP will expire in 10 minutes.</p>
-                <p>If you did not request this password reset, please ignore this email.</p>
-                <br>
-                <p>Best regards,<br>Vehicle Parts API Team</p>
-            </body>
-            </html>
-            """
-            plain_message = f"""
-            Password Reset OTP
-            
-            Hello {user.first_name},
-            
-            You have requested to reset your password for the Vehicle Parts API.
-            
-            Your OTP is: {otp}
-            
-            This OTP will expire in 10 minutes.
-            
-            If you did not request this password reset, please ignore this email.
-            
-            Best regards,
-            Vehicle Parts API Team
-            """
-
-            send_mail(
-                subject=subject,
-                message=plain_message,
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[user.email],
-                html_message=html_message,
-                fail_silently=False,
-            )
-            # TODO: Integrate SMS service here to send OTP via WhatsApp/SMS
-            logger = logging.getLogger(__name__)
-            logger.info(f'Password reset OTP {otp} generated for user {user.phone}. Email sent to {user.email}')
+        # Send OTP via SMS
+        logger = logging.getLogger(__name__)
+        sms_message = f"Your password reset OTP for Vehicle Parts API is: {otp}. This OTP will expire in 10 minutes. If you did not request this, please ignore this message."
+        
+        sms_result = sms_service.send_sms(user.phone, sms_message)
+        
+        if sms_result['success']:
+            logger.info(f'Password reset OTP {otp} generated for user {user.phone}. SMS sent successfully. SID: {sms_result.get("message_sid", "N/A")}')
+        else:
+            logger.error(f'Failed to send password reset OTP SMS to {user.phone}: {sms_result.get("message", "Unknown error")}')
+            # Still return success to avoid revealing if phone exists or not
+            # The OTP is still generated and can be verified
 
         return APIResponse.success(
             data={
                 'phone': phone,
                 'expires_in': '10 minutes',
-                'method': 'email' if user.email else 'sms'
+                'method': 'sms'
             },
             message='Password reset OTP sent successfully'
         )

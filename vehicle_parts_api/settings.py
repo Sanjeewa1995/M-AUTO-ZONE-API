@@ -290,11 +290,19 @@ else:
     MEDIA_URL = '/media/'
     MEDIA_ROOT = BASE_DIR / 'media'
 
+# Twilio Configuration (Shared credentials for SMS and WhatsApp)
+TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID', default='')
+TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN', default='')
+
+# SMS Configuration (Twilio)
+TWILIO_SMS_ENABLED = config('TWILIO_SMS_ENABLED', default=False, cast=bool)
+# SMS From Number: Your Twilio phone number in E.164 format (e.g., +1234567890)
+# You can get a Twilio phone number from: https://www.twilio.com/console/phone-numbers
+TWILIO_SMS_FROM = config('TWILIO_SMS_FROM', default='')
+
 # WhatsApp Configuration (Twilio)
 TWILIO_WHATSAPP_ENABLED = config(
     'TWILIO_WHATSAPP_ENABLED', default=False, cast=bool)
-TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID', default='')
-TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN', default='')
 # Twilio Environment: 'sandbox' or 'production'
 # Sandbox: Use for testing with Twilio WhatsApp Sandbox (limited to pre-approved numbers)
 # Production: Use your approved WhatsApp Business number from Twilio
