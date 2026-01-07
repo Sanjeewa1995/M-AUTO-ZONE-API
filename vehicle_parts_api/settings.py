@@ -106,23 +106,31 @@ WSGI_APPLICATION = 'vehicle_parts_api.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': config('DB_NAME', default='vehicle_parts'),
-        'USER': config('DB_USER', default='root'),
-        'PASSWORD': config('DB_PASSWORD', default=''),
-        'HOST': config('DB_HOST', default='localhost'),
-        'PORT': config('DB_PORT', default='3306'),
-        'OPTIONS': {
-            'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
-            'charset': 'utf8mb4',
-        },
+# Use SQLite for local development (DEBUG=True), MySQL for production
+if DEBUG:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
-
-# Configure PyMySQL to work with Django
-pymysql.install_as_MySQLdb()
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': config('DB_NAME', default='vehicle_parts'),
+            'USER': config('DB_USER', default='root'),
+            'PASSWORD': config('DB_PASSWORD', default=''),
+            'HOST': config('DB_HOST', default='localhost'),
+            'PORT': config('DB_PORT', default='3306'),
+            'OPTIONS': {
+                'init_command': "SET sql_mode='STRICT_TRANS_TABLES'",
+                'charset': 'utf8mb4',
+            },
+        }
+    }
+    # Configure PyMySQL to work with Django (only needed for MySQL)
+    pymysql.install_as_MySQLdb()
 
 
 # Password validation
@@ -312,6 +320,13 @@ TWILIO_ENVIRONMENT = config('TWILIO_ENVIRONMENT', default='sandbox')
 # Production: whatsapp:+1234567890 (Your approved WhatsApp Business number from Twilio)
 TWILIO_WHATSAPP_FROM = config(
     'TWILIO_WHATSAPP_FROM', default='whatsapp:+14155238886')
+
+# Twilio Verify Configuration (OTP Verification)
+# Twilio Verify is the recommended way to send OTP for Sri Lanka
+# Create a Verify Service in Twilio Console: https://www.twilio.com/console/verify/services
+# Copy the Service SID (starts with VA...)
+TWILIO_VERIFY_ENABLED = config('TWILIO_VERIFY_ENABLED', default=True, cast=bool)
+TWILIO_VERIFY_SID = config('TWILIO_VERIFY_SID', default='')
 
 
 # Logging Configuration

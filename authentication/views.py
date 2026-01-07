@@ -18,7 +18,7 @@ from .serializers import (
     DeleteAccountSerializer
 )
 from common.utils import APIResponse
-from .sms_service import sms_service
+from .otp_service import otp_service
 
 
 class RegisterView(generics.CreateAPIView):
@@ -229,43 +229,43 @@ def refresh_token_view(request):
 @permission_classes([AllowAny])
 def password_reset_request_view(request):
     """
-    Request password reset - send OTP via SMS
+    Request password reset - send OTP via Twilio Verify
     """
     serializer = PasswordResetRequestSerializer(data=request.data)
     if not serializer.is_valid():
         return APIResponse.validation_error(serializer.errors)
 
     phone = serializer.validated_data['phone']
+    logger = logging.getLogger(__name__)
 
     try:
         user = User.objects.get(phone=phone)
-        # Generate OTP
-        otp = user.generate_reset_otp()
-
-        # Send OTP via SMS
-        logger = logging.getLogger(__name__)
-        sms_message = f"Your password reset OTP for Vehicle Parts API is: {otp}. This OTP will expire in 10 minutes. If you did not request this, please ignore this message."
         
-        sms_result = sms_service.send_sms(user.phone, sms_message)
+        # Send OTP via Twilio Verify
+        otp_result = otp_service.send_otp(user.phone)
         
-        if sms_result['success']:
-            logger.info(f'Password reset OTP {otp} generated for user {user.phone}. SMS sent successfully. SID: {sms_result.get("message_sid", "N/A")}')
+        if otp_result['success']:
+            logger.info(f'Password reset OTP sent to {user.phone} via Twilio Verify. Verification SID: {otp_result.get("verification_sid", "N/A")}')
+            return APIResponse.success(
+                data={
+                    'phone': phone,
+                    'method': 'sms',
+                    'verification_sid': otp_result.get('verification_sid')
+                },
+                message='Password reset OTP sent successfully'
+            )
         else:
-            logger.error(f'Failed to send password reset OTP SMS to {user.phone}: {sms_result.get("message", "Unknown error")}')
+            logger.error(f'Failed to send password reset OTP to {user.phone}: {otp_result.get("message", "Unknown error")}')
             # Still return success to avoid revealing if phone exists or not
-            # The OTP is still generated and can be verified
-
-        return APIResponse.success(
-            data={
-                'phone': phone,
-                'expires_in': '10 minutes',
-                'method': 'sms'
-            },
-            message='Password reset OTP sent successfully'
-        )
+            return APIResponse.success(
+                data={'phone': phone},
+                message='If an account with this phone number exists, a password reset OTP has been sent'
+            )
 
     except User.DoesNotExist:
         # Don't reveal if phone exists or not for security
+        # Still try to send OTP to prevent user enumeration
+        otp_result = otp_service.send_otp(phone)
         return APIResponse.success(
             data={'phone': phone},
             message='If an account with this phone number exists, a password reset OTP has been sent'
@@ -276,31 +276,42 @@ def password_reset_request_view(request):
 @permission_classes([AllowAny])
 def password_reset_confirm_view(request):
     """
-    Confirm password reset with OTP
+    Confirm password reset with OTP using Twilio Verify
     """
     serializer = PasswordResetConfirmSerializer(data=request.data)
     if not serializer.is_valid():
         return APIResponse.validation_error(serializer.errors)
 
     phone = serializer.validated_data['phone']
-    otp = serializer.validated_data['otp']
+    otp_code = serializer.validated_data['otp']
     new_password = serializer.validated_data['new_password']
+    logger = logging.getLogger(__name__)
 
     try:
         user = User.objects.get(phone=phone)
 
-        # Validate OTP
-        is_valid, message = user.is_otp_valid(otp)
-        if not is_valid:
+        # Verify OTP using Twilio Verify
+        verify_result = otp_service.verify_otp(user.phone, otp_code)
+        
+        if not verify_result['success']:
             return APIResponse.error(
-                message=message,
-                error_code='INVALID_OTP'
+                message=verify_result.get('message', 'OTP verification failed'),
+                error_code='OTP_VERIFICATION_FAILED',
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if not verify_result['verified']:
+            return APIResponse.error(
+                message=verify_result.get('message', 'Invalid or expired OTP code'),
+                error_code='INVALID_OTP',
+                status_code=status.HTTP_400_BAD_REQUEST
             )
 
         # Set new password
         user.set_password(new_password)
-        user.clear_reset_otp()  # Clear the OTP
         user.save()
+        
+        logger.info(f'Password reset successful for user {user.phone}')
 
         return APIResponse.success(
             message='Password reset successfully'
@@ -317,26 +328,37 @@ def password_reset_confirm_view(request):
 @permission_classes([AllowAny])
 def verify_otp_view(request):
     """
-    Verify OTP without resetting password
+    Verify OTP using Twilio Verify (without resetting password)
     """
     serializer = OTPVerificationSerializer(data=request.data)
     if not serializer.is_valid():
         return APIResponse.validation_error(serializer.errors)
 
     phone = serializer.validated_data['phone']
-    otp = serializer.validated_data['otp']
+    otp_code = serializer.validated_data['otp']
+    logger = logging.getLogger(__name__)
 
     try:
         user = User.objects.get(phone=phone)
 
-        # Validate OTP
-        is_valid, message = user.is_otp_valid(otp)
-        if not is_valid:
+        # Verify OTP using Twilio Verify
+        verify_result = otp_service.verify_otp(user.phone, otp_code)
+        
+        if not verify_result['success']:
             return APIResponse.error(
-                message=message,
-                error_code='INVALID_OTP'
+                message=verify_result.get('message', 'OTP verification failed'),
+                error_code='OTP_VERIFICATION_FAILED',
+                status_code=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if not verify_result['verified']:
+            return APIResponse.error(
+                message=verify_result.get('message', 'Invalid or expired OTP code'),
+                error_code='INVALID_OTP',
+                status_code=status.HTTP_400_BAD_REQUEST
             )
 
+        logger.info(f'OTP verified successfully for user {user.phone}')
         return APIResponse.success(
             data={'phone': phone},
             message='OTP verified successfully'
