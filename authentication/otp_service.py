@@ -1,34 +1,33 @@
+"""
+OTP service using SMSlenz for sending SMS and local verification
+"""
 import logging
+import random
+import requests
 from django.conf import settings
-from twilio.rest import Client
-from twilio.base.exceptions import TwilioException
+from django.core.cache import cache
+from django.utils import timezone
+from datetime import timedelta
 
 logger = logging.getLogger(__name__)
 
 
 class OTPVerificationService:
     """
-    Service for OTP verification via Twilio Verify API
+    Service for OTP generation, sending via SMSlenz, and verification
     """
     
     def __init__(self):
-        self.account_sid = getattr(settings, 'TWILIO_ACCOUNT_SID', '')
-        self.auth_token = getattr(settings, 'TWILIO_AUTH_TOKEN', '')
-        self.verify_sid = getattr(settings, 'TWILIO_VERIFY_SID', '')
-        self.enabled = getattr(settings, 'TWILIO_VERIFY_ENABLED', False)
+        self.user_id = getattr(settings, 'SMSLENZ_USER_ID', '')
+        self.api_key = getattr(settings, 'SMSLENZ_API_KEY', '')
+        self.sender_id = getattr(settings, 'SMSLENZ_SENDER_ID', '')
+        self.enabled = getattr(settings, 'SMSLENZ_ENABLED', False)
+        self.api_url = 'https://smslenz.lk/api/send-sms'
+        self.otp_expiry_minutes = 10  # OTP expires in 10 minutes
         
-        if self.enabled and self.account_sid and self.auth_token and self.verify_sid:
-            try:
-                self.client = Client(self.account_sid, self.auth_token)
-            except Exception as e:
-                logger.error(f"Failed to initialize Twilio Verify client: {str(e)}")
-                self.client = None
-        else:
-            self.client = None
-    
     def send_otp(self, phone_number):
         """
-        Send OTP to a phone number using Twilio Verify
+        Generate OTP, store it in cache, and send via SMSlenz
         
         Args:
             phone_number (str): Recipient phone number in E.164 format (e.g., +94771234567)
@@ -39,13 +38,13 @@ class OTPVerificationService:
         if not self.enabled:
             return {
                 'success': False,
-                'message': 'OTP verification is not enabled'
+                'message': 'SMSlenz OTP service is not enabled'
             }
         
-        if not self.client:
+        if not self.user_id or not self.api_key or not self.sender_id:
             return {
                 'success': False,
-                'message': 'Twilio Verify client not initialized. Please check your configuration.'
+                'message': 'SMSlenz configuration incomplete. Please check SMSLENZ_USER_ID, SMSLENZ_API_KEY, and SMSLENZ_SENDER_ID in your .env file.'
             }
         
         if not phone_number:
@@ -54,83 +53,90 @@ class OTPVerificationService:
                 'message': 'Phone number is required'
             }
         
-        if not self.verify_sid:
-            return {
-                'success': False,
-                'message': 'TWILIO_VERIFY_SID is not configured. Please set it in your .env file.'
-            }
-        
-        # Ensure phone number is in correct format
+        # Format phone number
         phone_number = self._format_phone_number(phone_number)
         if not phone_number:
             return {
                 'success': False,
-                'message': f'Invalid phone number format. Please use E.164 format (e.g., +94771234567)'
+                'message': 'Invalid phone number format. Please use E.164 format (e.g., +94771234567)'
             }
         
+        # Generate 6-digit OTP
+        otp_code = str(random.randint(100000, 999999))
+        
+        # Store OTP in cache with expiration
+        cache_key = f'otp_code:{phone_number}'
+        cache.set(cache_key, otp_code, timeout=self.otp_expiry_minutes * 60)
+        
+        # Create SMS message
+        message = f"Your password reset OTP for Vehicle Parts API is: {otp_code}. This OTP will expire in {self.otp_expiry_minutes} minutes. If you did not request this, please ignore this message."
+        
+        # Send SMS via SMSlenz API
         try:
-            verification = self.client.verify.v2.services(self.verify_sid) \
-                .verifications.create(to=phone_number, channel='sms')
-            
-            logger.info(f"OTP verification sent successfully. SID: {verification.sid}, To: {phone_number}, Status: {verification.status}")
-            return {
-                'success': True,
-                'message': 'OTP sent successfully',
-                'verification_sid': verification.sid,
-                'status': verification.status
+            payload = {
+                'user_id': self.user_id,
+                'api_key': self.api_key,
+                'sender_id': self.sender_id,
+                'contact': phone_number,
+                'message': message
             }
             
-        except TwilioException as e:
-            error_str = str(e)
-            error_msg = f'Failed to send OTP: {error_str}'
+            response = requests.post(self.api_url, data=payload, timeout=10)
+            response.raise_for_status()
+            
+            result = response.json()
+            
+            # Check if SMS was sent successfully
+            # SMSlenz API returns: {"message": "SMS sent successfully", "data": {"status": "success", "campaign_id": ...}}
+            data = result.get('data', {})
+            status_in_data = data.get('status', '')
+            campaign_id = data.get('campaign_id')
+            
+            if response.status_code == 200 and (status_in_data == 'success' or campaign_id is not None):
+                logger.info(f"OTP sent successfully to {phone_number} via SMSlenz. OTP: {otp_code}, Campaign ID: {campaign_id}")
+                return {
+                    'success': True,
+                    'message': 'OTP sent successfully'
+                }
+            else:
+                error_msg = result.get('message', 'Failed to send SMS')
+                logger.error(f"Failed to send OTP via SMSlenz: {error_msg}")
+                return {
+                    'success': False,
+                    'message': f'Failed to send OTP: {error_msg}'
+                }
+                
+        except requests.exceptions.RequestException as e:
+            error_msg = f'Failed to send OTP via SMSlenz: {str(e)}'
             logger.error(error_msg)
-            
-            if '21212' in error_str or "not a valid phone number" in error_str.lower():
-                return {
-                    'success': False,
-                    'message': f'Invalid phone number format. Please use E.164 format (e.g., +94771234567). Error: {error_str}'
-                }
-            elif '60200' in error_str or "Invalid parameter" in error_str:
-                return {
-                    'success': False,
-                    'message': f'Invalid verification service configuration. Please check TWILIO_VERIFY_SID.'
-                }
-            
             return {
                 'success': False,
-                'message': error_msg
+                'message': 'Failed to send OTP. Please try again later.'
             }
         except Exception as e:
             error_msg = f'Unexpected error sending OTP: {str(e)}'
             logger.error(error_msg)
             return {
                 'success': False,
-                'message': error_msg
+                'message': 'Failed to send OTP. Please try again later.'
             }
     
     def verify_otp(self, phone_number, code):
         """
-        Verify OTP code using Twilio Verify
+        Verify OTP code against stored value in cache
         
         Args:
             phone_number (str): Phone number in E.164 format (e.g., +94771234567)
             code (str): OTP code entered by user
             
         Returns:
-            dict: Result dictionary with 'success' (bool), 'verified' (bool), 'message' (str), and 'status' (str)
+            dict: Result dictionary with 'success' (bool), 'verified' (bool), 'message' (str)
         """
         if not self.enabled:
             return {
                 'success': False,
                 'verified': False,
                 'message': 'OTP verification is not enabled'
-            }
-        
-        if not self.client:
-            return {
-                'success': False,
-                'verified': False,
-                'message': 'Twilio Verify client not initialized. Please check your configuration.'
             }
         
         if not phone_number or not code:
@@ -140,76 +146,52 @@ class OTPVerificationService:
                 'message': 'Phone number and OTP code are required'
             }
         
-        if not self.verify_sid:
-            return {
-                'success': False,
-                'verified': False,
-                'message': 'TWILIO_VERIFY_SID is not configured. Please set it in your .env file.'
-            }
-        
+        # Format phone number
         phone_number = self._format_phone_number(phone_number)
         if not phone_number:
             return {
                 'success': False,
                 'verified': False,
-                'message': f'Invalid phone number format. Please use E.164 format (e.g., +94771234567)'
+                'message': 'Invalid phone number format. Please use E.164 format (e.g., +94771234567)'
             }
         
-        try:
-            verification_check = self.client.verify.v2.services(self.verify_sid) \
-                .verification_checks.create(to=phone_number, code=code)
-            
-            is_verified = verification_check.status == 'approved'
-            
-            logger.info(f"OTP verification check. SID: {verification_check.sid}, To: {phone_number}, Status: {verification_check.status}, Verified: {is_verified}")
-            
-            return {
-                'success': True,
-                'verified': is_verified,
-                'status': verification_check.status,
-                'message': 'OTP verified successfully' if is_verified else 'Invalid or expired OTP code',
-                'verification_check_sid': verification_check.sid
-            }
-            
-        except TwilioException as e:
-            error_str = str(e)
-            error_msg = f'Failed to verify OTP: {error_str}'
-            logger.error(error_msg)
-            
-            if '20404' in error_str or "not found" in error_str.lower():
-                return {
-                    'success': False,
-                    'verified': False,
-                    'message': 'OTP verification not found. Please request a new OTP.',
-                    'status': 'not_found'
-                }
-            elif '60203' in error_str or "Max check attempts" in error_str:
-                return {
-                    'success': False,
-                    'verified': False,
-                    'message': 'Maximum verification attempts exceeded. Please request a new OTP.',
-                    'status': 'max_attempts_exceeded'
-                }
-            
+        # Get OTP from cache
+        cache_key = f'otp_code:{phone_number}'
+        stored_otp = cache.get(cache_key)
+        
+        if not stored_otp:
+            logger.warning(f"OTP verification failed for {phone_number}: OTP not found or expired")
             return {
                 'success': False,
                 'verified': False,
-                'message': error_msg,
-                'status': 'error'
+                'message': 'OTP not found or expired. Please request a new OTP.',
+                'status': 'expired'
             }
-        except Exception as e:
-            error_msg = f'Unexpected error verifying OTP: {str(e)}'
-            logger.error(error_msg)
+        
+        # Verify OTP code
+        if stored_otp != code:
+            logger.warning(f"OTP verification failed for {phone_number}: Invalid code")
             return {
                 'success': False,
                 'verified': False,
-                'message': error_msg,
-                'status': 'error'
+                'message': 'Invalid OTP code. Please try again.',
+                'status': 'invalid'
             }
+        
+        # OTP verified successfully, delete from cache
+        cache.delete(cache_key)
+        logger.info(f"OTP verified successfully for {phone_number}")
+        
+        return {
+            'success': True,
+            'verified': True,
+            'message': 'OTP verified successfully',
+            'status': 'approved'
+        }
     
     def _format_phone_number(self, phone_number):
         """
-        Format phone number to E.164 format
+        Format phone number to E.164 format for SMSlenz (must include +94 for Sri Lanka)
         
         Args:
             phone_number (str): Phone number in various formats
@@ -220,40 +202,38 @@ class OTPVerificationService:
         if not phone_number:
             return None
         
+        # Remove spaces, dashes, parentheses, and other non-digit/+ characters
         cleaned = ''.join(char for char in phone_number if char.isdigit() or char == '+')
         
+        # If already starts with +, validate it
         if cleaned.startswith('+'):
             digits_only = cleaned[1:]
+            # Must be 10-15 digits
             if digits_only.isdigit() and 10 <= len(digits_only) <= 15:
                 return cleaned
             else:
                 return None
-            
+        
+        # Sri Lankan numbers: 0XXXXXXXXX or 07XXXXXXXX (remove leading 0, add +94)
         if cleaned.startswith('0'):
             if len(cleaned) >= 9:
                 return '+94' + cleaned[1:]
         
-        if len(cleaned) == 10 and cleaned.isdigit():
-            return '+1' + cleaned
-        
-        if cleaned.startswith('0') and len(cleaned) == 11:
-            return '+44' + cleaned[1:]
-        
+        # If already 9-10 digits without +, assume Sri Lankan and add +94
         if 9 <= len(cleaned) <= 10 and cleaned.isdigit():
+            # Check if it looks like a Sri Lankan mobile (starts with 7)
             if cleaned[0] == '7' or (cleaned.startswith('0') and cleaned[1] == '7'):
                 if cleaned.startswith('0'):
                     return '+94' + cleaned[1:]
                 else:
                     return '+94' + cleaned
         
-        if len(cleaned) == 10 and cleaned.isdigit():
-            return '+1' + cleaned
-        
+        # Basic validation
         if len(cleaned) < 9 or len(cleaned) > 15:
             return None
         
         return None
 
 
+# Singleton instance
 otp_service = OTPVerificationService()
-

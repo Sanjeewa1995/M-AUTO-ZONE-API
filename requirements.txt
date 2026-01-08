@@ -20,5 +20,8 @@ numpy==2.2.6
 boto3==1.40.59
 django-storages==1.14.6
 
-# WhatsApp messaging
+# SMS OTP service (SMSlenz)
+requests==2.31.0
+
+# WhatsApp messaging (optional - keep if using WhatsApp)
 twilio==9.4.1

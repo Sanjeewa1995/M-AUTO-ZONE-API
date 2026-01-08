@@ -136,7 +136,6 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     phone = serializers.CharField()
-    otp = serializers.CharField(max_length=6, min_length=6)
     new_password = serializers.CharField(min_length=8)
     new_password_confirm = serializers.CharField()
     
@@ -153,11 +152,6 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
         if attrs['new_password'] != attrs['new_password_confirm']:
             raise serializers.ValidationError("Passwords don't match")
         return attrs
-    
-    def validate_otp(self, value):
-        if not value.isdigit() or len(value) != 6:
-            raise serializers.ValidationError("OTP must be a 6-digit number")
-        return value
 
 
 class OTPVerificationSerializer(serializers.Serializer):

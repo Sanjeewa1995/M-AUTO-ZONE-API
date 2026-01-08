@@ -321,12 +321,14 @@ TWILIO_ENVIRONMENT = config('TWILIO_ENVIRONMENT', default='sandbox')
 TWILIO_WHATSAPP_FROM = config(
     'TWILIO_WHATSAPP_FROM', default='whatsapp:+14155238886')
 
-# Twilio Verify Configuration (OTP Verification)
-# Twilio Verify is the recommended way to send OTP for Sri Lanka
-# Create a Verify Service in Twilio Console: https://www.twilio.com/console/verify/services
-# Copy the Service SID (starts with VA...)
-TWILIO_VERIFY_ENABLED = config('TWILIO_VERIFY_ENABLED', default=True, cast=bool)
-TWILIO_VERIFY_SID = config('TWILIO_VERIFY_SID', default='')
+# SMSlenz Configuration (OTP Verification)
+# SMSlenz is a local SMS service in Sri Lanka
+# Sign up at https://smslenz.lk/ and get your credentials from the dashboard
+# API Documentation: https://smslenz.lk/developers/api
+SMSLENZ_ENABLED = config('SMSLENZ_ENABLED', default=True, cast=bool)
+SMSLENZ_USER_ID = config('SMSLENZ_USER_ID', default='')
+SMSLENZ_API_KEY = config('SMSLENZ_API_KEY', default='')
+SMSLENZ_SENDER_ID = config('SMSLENZ_SENDER_ID', default='')
 
 
 # Logging Configuration

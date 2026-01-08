@@ -4,7 +4,9 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
 import logging
+import secrets
 from django.db import IntegrityError
+from django.core.cache import cache
 from .models import User
 from .serializers import (
     UserRegistrationSerializer,
@@ -229,7 +231,7 @@ def refresh_token_view(request):
 @permission_classes([AllowAny])
 def password_reset_request_view(request):
     """
-    Request password reset - send OTP via Twilio Verify
+    Request password reset - send OTP via SMSlenz
     """
     serializer = PasswordResetRequestSerializer(data=request.data)
     if not serializer.is_valid():
@@ -241,16 +243,15 @@ def password_reset_request_view(request):
     try:
         user = User.objects.get(phone=phone)
         
-        # Send OTP via Twilio Verify
+        # Send OTP via SMSlenz
         otp_result = otp_service.send_otp(user.phone)
         
         if otp_result['success']:
-            logger.info(f'Password reset OTP sent to {user.phone} via Twilio Verify. Verification SID: {otp_result.get("verification_sid", "N/A")}')
+            logger.info(f'Password reset OTP sent to {user.phone} via SMSlenz')
             return APIResponse.success(
                 data={
                     'phone': phone,
-                    'method': 'sms',
-                    'verification_sid': otp_result.get('verification_sid')
+                    'method': 'sms'
                 },
                 message='Password reset OTP sent successfully'
             )
@@ -276,36 +277,33 @@ def password_reset_request_view(request):
 @permission_classes([AllowAny])
 def password_reset_confirm_view(request):
     """
-    Confirm password reset with OTP using Twilio Verify
+    Confirm password reset - requires OTP to be verified first via /api/v1/auth/verify-otp/
     """
     serializer = PasswordResetConfirmSerializer(data=request.data)
     if not serializer.is_valid():
         return APIResponse.validation_error(serializer.errors)
 
     phone = serializer.validated_data['phone']
-    otp_code = serializer.validated_data['otp']
     new_password = serializer.validated_data['new_password']
     logger = logging.getLogger(__name__)
 
     try:
         user = User.objects.get(phone=phone)
 
-        # Verify OTP using Twilio Verify
-        verify_result = otp_service.verify_otp(user.phone, otp_code)
+        # Check if OTP was verified (verification token exists in cache)
+        cache_key = f'password_reset_token:{user.phone}'
+        stored_token = cache.get(cache_key)
         
-        if not verify_result['success']:
+        if not stored_token:
             return APIResponse.error(
-                message=verify_result.get('message', 'OTP verification failed'),
-                error_code='OTP_VERIFICATION_FAILED',
+                message='OTP verification required. Please verify OTP first using /api/v1/auth/verify-otp/',
+                error_code='OTP_VERIFICATION_REQUIRED',
                 status_code=status.HTTP_400_BAD_REQUEST
             )
         
-        if not verify_result['verified']:
-            return APIResponse.error(
-                message=verify_result.get('message', 'Invalid or expired OTP code'),
-                error_code='INVALID_OTP',
-                status_code=status.HTTP_400_BAD_REQUEST
-            )
+        # Token exists, delete it so it can't be reused
+        cache.delete(cache_key)
+        logger.info(f'Password reset for user {user.phone} (OTP was previously verified)')
 
         # Set new password
         user.set_password(new_password)
@@ -328,7 +326,7 @@ def password_reset_confirm_view(request):
 @permission_classes([AllowAny])
 def verify_otp_view(request):
     """
-    Verify OTP using Twilio Verify (without resetting password)
+    Verify OTP using SMSlenz (without resetting password)
     """
     serializer = OTPVerificationSerializer(data=request.data)
     if not serializer.is_valid():
@@ -341,7 +339,7 @@ def verify_otp_view(request):
     try:
         user = User.objects.get(phone=phone)
 
-        # Verify OTP using Twilio Verify
+        # Verify OTP using SMSlenz
         verify_result = otp_service.verify_otp(user.phone, otp_code)
         
         if not verify_result['success']:
@@ -358,9 +356,19 @@ def verify_otp_view(request):
                 status_code=status.HTTP_400_BAD_REQUEST
             )
 
+        # Generate a verification token that can be used for password reset
+        # Token is valid for 10 minutes (same as OTP expiration)
+        verification_token = secrets.token_urlsafe(32)
+        cache_key = f'password_reset_token:{user.phone}'
+        cache.set(cache_key, verification_token, timeout=600)  # 10 minutes
+        
         logger.info(f'OTP verified successfully for user {user.phone}')
         return APIResponse.success(
-            data={'phone': phone},
+            data={
+                'phone': phone,
+                'verification_token': verification_token,
+                'expires_in': '10 minutes'
+            },
             message='OTP verified successfully'
         )
 
