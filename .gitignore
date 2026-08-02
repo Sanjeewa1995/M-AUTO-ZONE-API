@@ -142,6 +142,9 @@ static/
 .env.rds
 .env.security-group
 
+# Server credentials (never commit real passwords/keys)
+deploy/SERVER_INFO.md
+
 # IDE
 .vscode/
 .idea/
