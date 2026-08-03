@@ -244,7 +244,7 @@ def password_reset_request_view(request):
         user = User.objects.get(phone=phone)
         
         # Send OTP via SMSlenz
-        otp_result = otp_service.send_otp(user.phone)
+        otp_result = otp_service.send_otp(user)
         
         if otp_result['success']:
             logger.info(f'Password reset OTP sent to {user.phone} via SMSlenz')
@@ -265,8 +265,6 @@ def password_reset_request_view(request):
 
     except User.DoesNotExist:
         # Don't reveal if phone exists or not for security
-        # Still try to send OTP to prevent user enumeration
-        otp_result = otp_service.send_otp(phone)
         return APIResponse.success(
             data={'phone': phone},
             message='If an account with this phone number exists, a password reset OTP has been sent'
@@ -339,8 +337,8 @@ def verify_otp_view(request):
     try:
         user = User.objects.get(phone=phone)
 
-        # Verify OTP using SMSlenz
-        verify_result = otp_service.verify_otp(user.phone, otp_code)
+        # Verify OTP using SMSlenz (database)
+        verify_result = otp_service.verify_otp(user, otp_code)
         
         if not verify_result['success']:
             return APIResponse.error(
@@ -356,6 +354,9 @@ def verify_otp_view(request):
                 status_code=status.HTTP_400_BAD_REQUEST
             )
 
+        # Clear the OTP after successful verification
+        user.clear_reset_otp()
+        
         # Generate a verification token that can be used for password reset
         # Token is valid for 10 minutes (same as OTP expiration)
         verification_token = secrets.token_urlsafe(32)

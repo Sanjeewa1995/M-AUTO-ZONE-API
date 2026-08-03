@@ -136,7 +136,7 @@ class PasswordResetRequestSerializer(serializers.Serializer):
 
 class PasswordResetConfirmSerializer(serializers.Serializer):
     phone = serializers.CharField()
-    new_password = serializers.CharField(min_length=8)
+    new_password = serializers.CharField()
     new_password_confirm = serializers.CharField()
     
     def validate_phone(self, value):
@@ -175,7 +175,7 @@ class OTPVerificationSerializer(serializers.Serializer):
 
 class ChangePasswordSerializer(serializers.Serializer):
     current_password = serializers.CharField()
-    new_password = serializers.CharField(min_length=8)
+    new_password = serializers.CharField()
     new_password_confirm = serializers.CharField()
     
     def validate_current_password(self, value):

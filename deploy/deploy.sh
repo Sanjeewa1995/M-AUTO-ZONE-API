@@ -7,7 +7,7 @@ set -e  # Exit on any error
 
 APP_DIR="/var/www/vehicle-parts-api"
 VENV_DIR="$APP_DIR/venv"
-USER=$(whoami)
+SERVICE_USER="www-data"
 
 echo "========================================="
 echo "Django Application Deployment"
@@ -26,9 +26,10 @@ fi
 echo "Activating virtual environment..."
 source $VENV_DIR/bin/activate
 
-# Upgrade pip
+# Upgrade pip (setuptools pinned below 81: newer versions drop pkg_resources,
+# which djangorestframework-simplejwt still imports, breaking Django startup)
 echo "Upgrading pip..."
-pip install --upgrade pip setuptools wheel
+pip install --upgrade pip wheel 'setuptools<81'
 
 # Install/upgrade dependencies
 echo "Installing Python dependencies..."
@@ -50,9 +51,9 @@ python manage.py migrate --noinput
 #     User.objects.create_superuser('admin', 'admin@example.com', 'changeme123!')
 # EOF
 
-# Set proper permissions
+# Set proper permissions (gunicorn runs as www-data - see vehicle-parts-api.service)
 echo "Setting file permissions..."
-sudo chown -R $USER:$USER $APP_DIR
+sudo chown -R $SERVICE_USER:$SERVICE_USER $APP_DIR
 sudo chmod -R 755 $APP_DIR
 sudo chmod -R 775 $APP_DIR/media
 sudo chmod -R 775 $APP_DIR/staticfiles

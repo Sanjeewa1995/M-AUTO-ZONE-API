@@ -1,8 +1,11 @@
 from django.contrib import admin
 from django.contrib import messages
 from django.shortcuts import render, redirect
+from django.http import HttpResponse
 from django import forms
 from django.conf import settings
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
 from .models import VehiclePartRequest
 from store.models import Shop, RequestHasShop
 from store.whatsapp_service import whatsapp_service
@@ -68,7 +71,7 @@ class VehiclePartRequestAdmin(admin.ModelAdmin):
     ]
     readonly_fields = ['created_at', 'updated_at']
     ordering = ['-created_at']
-    actions = ['assign_shops_action']
+    actions = ['assign_shops_action', 'export_as_excel']
     
     fieldsets = (
         ('Vehicle Information', {
@@ -135,6 +138,56 @@ class VehiclePartRequestAdmin(admin.ModelAdmin):
         return render(request, 'admin/request/assign_shops_intermediate.html', context)
     
     assign_shops_action.short_description = "Assign shops to selected requests"
+
+    def export_as_excel(self, request, queryset):
+        """
+        Admin action to export selected requests as an Excel (.xlsx) file
+        """
+        wb = Workbook()
+        ws = wb.active
+        ws.title = 'Vehicle Part Requests'
+
+        headers = [
+            'ID', 'User Phone', 'User Email', 'User Name',
+            'Vehicle Type', 'Vehicle Model', 'Vehicle Year',
+            'Part Name', 'Part Number', 'Description',
+            'Status', 'Created At', 'Updated At',
+            'Vehicle Image URL', 'Part Image URL', 'Part Video URL',
+        ]
+        ws.append(headers)
+
+        for req in queryset.select_related('user'):
+            ws.append([
+                req.id,
+                req.user.phone,
+                req.user.email or '',
+                f'{req.user.first_name} {req.user.last_name}'.strip(),
+                req.get_vehicle_type_display(),
+                req.vehicle_model,
+                req.vehicle_year,
+                req.part_name,
+                req.part_number or '',
+                req.description or '',
+                req.get_status_display(),
+                req.created_at.strftime('%Y-%m-%d %H:%M'),
+                req.updated_at.strftime('%Y-%m-%d %H:%M'),
+                req.vehicle_image.url if req.vehicle_image else '',
+                req.part_image.url if req.part_image else '',
+                req.part_video.url if req.part_video else '',
+            ])
+
+        for i, header in enumerate(headers, start=1):
+            column = ws.column_dimensions[get_column_letter(i)]
+            column.width = max(len(header) + 2, 14)
+
+        response = HttpResponse(
+            content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+        response['Content-Disposition'] = 'attachment; filename=vehicle_part_requests.xlsx'
+        wb.save(response)
+        return response
+
+    export_as_excel.short_description = "Export selected requests to Excel"
     
     def _process_shop_assignment(self, request, request_ids, shops, custom_message, send_whatsapp=False):
         """Process the shop assignment"""

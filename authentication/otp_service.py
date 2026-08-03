@@ -1,11 +1,9 @@
 """
-OTP service using SMSlenz for sending SMS and local verification
+OTP service using SMSlenz for sending SMS and database for storage
 """
 import logging
-import random
 import requests
 from django.conf import settings
-from django.core.cache import cache
 from django.utils import timezone
 from datetime import timedelta
 
@@ -14,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class OTPVerificationService:
     """
-    Service for OTP generation, sending via SMSlenz, and verification
+    Service for OTP generation, sending via SMSlenz, and verification using database
     """
     
     def __init__(self):
@@ -25,12 +23,12 @@ class OTPVerificationService:
         self.api_url = 'https://smslenz.lk/api/send-sms'
         self.otp_expiry_minutes = 10  # OTP expires in 10 minutes
         
-    def send_otp(self, phone_number):
+    def send_otp(self, user):
         """
-        Generate OTP, store it in cache, and send via SMSlenz
+        Generate OTP, store it in user's reset_otp field, and send via SMSlenz
         
         Args:
-            phone_number (str): Recipient phone number in E.164 format (e.g., +94771234567)
+            user: User model instance
             
         Returns:
             dict: Result dictionary with 'success' (bool) and 'message' (str)
@@ -47,26 +45,22 @@ class OTPVerificationService:
                 'message': 'SMSlenz configuration incomplete. Please check SMSLENZ_USER_ID, SMSLENZ_API_KEY, and SMSLENZ_SENDER_ID in your .env file.'
             }
         
-        if not phone_number:
+        if not user or not user.phone:
             return {
                 'success': False,
-                'message': 'Phone number is required'
+                'message': 'User and phone number are required'
             }
         
         # Format phone number
-        phone_number = self._format_phone_number(phone_number)
+        phone_number = self._format_phone_number(user.phone)
         if not phone_number:
             return {
                 'success': False,
                 'message': 'Invalid phone number format. Please use E.164 format (e.g., +94771234567)'
             }
         
-        # Generate 6-digit OTP
-        otp_code = str(random.randint(100000, 999999))
-        
-        # Store OTP in cache with expiration
-        cache_key = f'otp_code:{phone_number}'
-        cache.set(cache_key, otp_code, timeout=self.otp_expiry_minutes * 60)
+        # Generate and store OTP using User model's method
+        otp_code = user.generate_reset_otp()
         
         # Create SMS message
         message = f"Your password reset OTP for Vehicle Parts API is: {otp_code}. This OTP will expire in {self.otp_expiry_minutes} minutes. If you did not request this, please ignore this message."
@@ -101,6 +95,8 @@ class OTPVerificationService:
             else:
                 error_msg = result.get('message', 'Failed to send SMS')
                 logger.error(f"Failed to send OTP via SMSlenz: {error_msg}")
+                # Clear OTP since SMS failed
+                user.clear_reset_otp()
                 return {
                     'success': False,
                     'message': f'Failed to send OTP: {error_msg}'
@@ -109,6 +105,8 @@ class OTPVerificationService:
         except requests.exceptions.RequestException as e:
             error_msg = f'Failed to send OTP via SMSlenz: {str(e)}'
             logger.error(error_msg)
+            # Clear OTP since SMS failed
+            user.clear_reset_otp()
             return {
                 'success': False,
                 'message': 'Failed to send OTP. Please try again later.'
@@ -116,17 +114,19 @@ class OTPVerificationService:
         except Exception as e:
             error_msg = f'Unexpected error sending OTP: {str(e)}'
             logger.error(error_msg)
+            # Clear OTP since SMS failed
+            user.clear_reset_otp()
             return {
                 'success': False,
                 'message': 'Failed to send OTP. Please try again later.'
             }
     
-    def verify_otp(self, phone_number, code):
+    def verify_otp(self, user, code):
         """
-        Verify OTP code against stored value in cache
+        Verify OTP code against user's reset_otp field in database
         
         Args:
-            phone_number (str): Phone number in E.164 format (e.g., +94771234567)
+            user: User model instance
             code (str): OTP code entered by user
             
         Returns:
@@ -139,55 +139,32 @@ class OTPVerificationService:
                 'message': 'OTP verification is not enabled'
             }
         
-        if not phone_number or not code:
+        if not user or not code:
             return {
                 'success': False,
                 'verified': False,
-                'message': 'Phone number and OTP code are required'
+                'message': 'User and OTP code are required'
             }
         
-        # Format phone number
-        phone_number = self._format_phone_number(phone_number)
-        if not phone_number:
+        # Verify OTP using User model's method
+        is_valid, message = user.is_otp_valid(code)
+        
+        if is_valid:
+            logger.info(f"OTP verified successfully for user {user.phone}")
+            return {
+                'success': True,
+                'verified': True,
+                'message': 'OTP verified successfully',
+                'status': 'approved'
+            }
+        else:
+            logger.warning(f"OTP verification failed for {user.phone}: {message}")
             return {
                 'success': False,
                 'verified': False,
-                'message': 'Invalid phone number format. Please use E.164 format (e.g., +94771234567)'
+                'message': message,
+                'status': 'invalid' if 'Invalid' in message else 'expired' if 'expired' in message else 'locked' if 'locked' in message else 'error'
             }
-        
-        # Get OTP from cache
-        cache_key = f'otp_code:{phone_number}'
-        stored_otp = cache.get(cache_key)
-        
-        if not stored_otp:
-            logger.warning(f"OTP verification failed for {phone_number}: OTP not found or expired")
-            return {
-                'success': False,
-                'verified': False,
-                'message': 'OTP not found or expired. Please request a new OTP.',
-                'status': 'expired'
-            }
-        
-        # Verify OTP code
-        if stored_otp != code:
-            logger.warning(f"OTP verification failed for {phone_number}: Invalid code")
-            return {
-                'success': False,
-                'verified': False,
-                'message': 'Invalid OTP code. Please try again.',
-                'status': 'invalid'
-            }
-        
-        # OTP verified successfully, delete from cache
-        cache.delete(cache_key)
-        logger.info(f"OTP verified successfully for {phone_number}")
-        
-        return {
-            'success': True,
-            'verified': True,
-            'message': 'OTP verified successfully',
-            'status': 'approved'
-        }
     
     def _format_phone_number(self, phone_number):
         """
